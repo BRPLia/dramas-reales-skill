@@ -1,0 +1,6 @@
+# Subtitulos OPCIONALES, 100% locales (metadata.subtitulos = true).
+# faster-whisper corre en CPU con el modelo `small` (~460 MB, se descarga la
+# primera vez). No necesita GPU, no necesita cuenta, no manda audio a ningun
+# servidor. Instalalo solo si quieres subtitulos:
+#     pip install -r requirements-subs.txt
+faster-whisper>=1.0

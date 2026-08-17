@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+.env
+
+# Sesion de Google (NUNCA se sube)
+session/*
+!session/LEEME.txt
+
+# Laminas generadas (personajes y escenarios de TUS historias)
+recursos/*
+!recursos/LEEME.txt
+
+# Salidas generadas
+outputs/*
+!outputs/LEEME.txt
+
+# Remotion: dependencias y artefactos generados por cada render
+remotion/node_modules/
+remotion/assets/*
+!remotion/assets/.gitkeep
+remotion/out.mp4
+remotion/.cache/
+
+# Debug del provider de Flow
+_debug/

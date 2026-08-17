@@ -1,0 +1,87 @@
+import { AbsoluteFill, Sequence, useCurrentFrame, interpolate, spring, useVideoConfig } from "remotion";
+import { Video } from "@remotion/media";
+
+{% for s in scenes -%}
+import escena<< s.number >> from '../assets/escena<< s.number >>.mp4';
+{% if s.has_subs %}import sub<< s.number >>    from '../assets/escena<< s.number >>.json';
+{% endif %}
+{%- endfor %}
+
+// dramas-reales — composicion LIMPIA.
+// Cada escena es un mp4 con el audio NATIVO de Flow (voz + SFX embebidos), asi
+// que <Video> reproduce su propio audio: no se monta ninguna pista aparte.
+// Sin marcas de agua, sin logos, sin CTA, sin texto de canal. Corte limpio
+// entre escenas (el flash no pega con drama realista), solo un push-in suave.
+
+const fontCSS = `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap');`;
+
+{% if has_subs %}
+// Subtitulos opcionales (metadata.subtitulos = true), generados en local.
+const SubtitlesRenderer: React.FC<{ subs: {startMs: number, endMs: number, text: string}[] }> = ({ subs }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const currentTimeMs = (frame / fps) * 1000;
+  const currentSub = subs.find(s => currentTimeMs >= s.startMs && currentTimeMs <= s.endMs);
+  if (!currentSub) return null;
+  const startFrame = Math.floor((currentSub.startMs / 1000) * fps);
+  const opacity = interpolate(frame, [startFrame, startFrame + 4], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  return (
+    <div style={{ position: 'absolute', bottom: 250, width: '100%', display: 'flex', justifyContent: 'center', zIndex: 100, padding: '0 80px', opacity }}>
+      <span style={{
+        color: '#FFFFFF', fontSize: 54,
+        fontFamily: '"Inter", "Helvetica Neue", sans-serif',
+        fontWeight: 600, textAlign: 'center', lineHeight: 1.3,
+        letterSpacing: '0.2px',
+        background: 'rgba(0,0,0,0.32)',
+        padding: '8px 20px', borderRadius: 12,
+        boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone',
+        textShadow: '0 2px 8px rgba(0,0,0,0.95), 0 1px 2px rgba(0,0,0,0.9)',
+        display: 'inline-block',
+      }}>{currentSub.text}</span>
+    </div>
+  );
+};
+{% endif %}
+
+// Push-in suave al entrar y una bajada corta de brillo al salir: el clip se
+// siente filmado, no pegado. Nada de esto tapa la imagen.
+const SceneTransitionWrapper: React.FC<{ children: React.ReactNode, duration: number, isFirstScene?: boolean }> = ({ children, duration, isFirstScene }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const T = 8;
+  const snapIn        = spring({ fps, frame, config: { damping: 14, mass: 0.4, stiffness: 320 } });
+  const scaleIn       = isFirstScene ? 1.04 : interpolate(snapIn, [0, 1], [1.08, 1.04]);
+  const scaleOut      = interpolate(frame, [duration - T, duration], [1.04, 1.0], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' });
+  const brightnessOut = interpolate(frame, [duration - T, duration], [1, 0.8], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' });
+  const isEnding = frame > duration - T - 2;
+  return (
+    <div style={{
+      width: '100%', height: '100%',
+      transform: `scale(${isEnding ? scaleOut : scaleIn})`,
+      filter: `brightness(${isEnding ? brightnessOut : 1})`,
+      position: 'relative',
+    }}>
+      {children}
+    </div>
+  );
+};
+
+export const MainVideo = () => {
+  // Duracion de cada escena = clip COMPLETO (frames reales medidos con ffprobe).
+  return (
+    <AbsoluteFill style={{ backgroundColor: '#000' }}>
+      <style>{fontCSS}</style>
+{% for s in scenes %}
+      {/* ── ESCENA << s.number >> ── */}
+      <Sequence name="Escena<< s.number >>" from={<< s.start >>} durationInFrames={<< s.duration_frames >>}>
+        <SceneTransitionWrapper duration={<< s.duration_frames >>}{% if loop.first %} isFirstScene{% endif %}>
+          <Video src={escena<< s.number >>} objectFit="cover" style={{ width: '100%', height: '100%', transform: 'scale(1.04)' }} />
+        </SceneTransitionWrapper>
+{%- if s.has_subs %}
+        <SubtitlesRenderer subs={sub<< s.number >>} />
+{%- endif %}
+      </Sequence>
+{% endfor %}
+    </AbsoluteFill>
+  );
+};

@@ -1,0 +1,12 @@
+Aqui viven las LAMINAS de tus personajes y escenarios: un PNG por label
+(madre.png, set_casa_abuela.png...). La skill las genera la primera vez que
+aparece el label y despues las REUSA.
+
+Eso es lo que da consistencia de serie: si dos guiones usan el mismo label,
+sale la misma cara y la misma locacion.
+
+Por lo mismo, nombra por historia y no por tipo: `set_casa_abuela`, no
+`set_casa`. Si dos guiones distintos usan `set_casa`, el segundo reusa la
+lamina del primero y su descripcion se ignora en silencio.
+
+Para rehacer una lamina: borra su PNG y vuelve a generar.

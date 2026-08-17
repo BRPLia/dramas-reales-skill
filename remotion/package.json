@@ -1,0 +1,22 @@
+{
+  "name": "dramas-reales-remotion",
+  "version": "1.0.0",
+  "description": "Remotion embebido del estilo dramas-reales (1 composicion).",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "@remotion/cli": "^4.0.457",
+    "@remotion/media": "^4.0.457",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "^4.0.457"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.7",
+    "typescript": "5.9.3"
+  },
+  "scripts": {
+    "dev": "remotion studio src/index.ts --port 9848",
+    "render": "remotion render src/index.ts Short out.mp4"
+  }
+}
