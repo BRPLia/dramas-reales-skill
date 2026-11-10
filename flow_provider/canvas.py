@@ -5,96 +5,90 @@ from .browser import get_page
 from .registry import capture_name
 import re
 
+SEL_ADD_INGREDIENT = (
+    'button.add-menu-trigger, '
+    'button[aria-haspopup="dialog"]:has-text("Crear"), '
+    'button[aria-haspopup="dialog"]:has-text("Añadir"), '
+    'button[aria-haspopup="dialog"]:has-text("Agregar"), '
+    'button[aria-haspopup="dialog"]:has-text("Add"), '
+    'button[aria-haspopup="dialog"][aria-label*="recurso"], '
+    'button[aria-haspopup="dialog"][aria-label*="Añadir"], '
+    'button[aria-haspopup="dialog"][aria-label*="Crear"]'
+)
+def _asb_key(src: str) -> str | None:
+    """Identificador completo; ignora dominio, query y sufijo de tamaño."""
+    from urllib.parse import urlsplit
+    path = urlsplit(src or "").path
+    if "/asb/" not in path:
+        return None
+    return path.split("/asb/", 1)[1].split("=", 1)[0] or None
 
-SEL_ADD_INGREDIENT = 'button[aria-haspopup="dialog"]:has-text("Crear")'
+
+_asset_asb_keys: dict[str, str] = {}
+
+
+async def _matching_asset_image(scope, uuid: str, key: str | None):
+    for img in await scope.locator("img").all():
+        media_id = await img.get_attribute("data-media-id")
+        src = await img.get_attribute("src") or ""
+        if media_id == uuid or (key and _asb_key(src) == key) or re.search(
+            r"(?:[?&]name=|/(?:image|video)/)" + re.escape(uuid) + r"(?:[?&#/=]|$)", src
+        ):
+            return img
+    return None
+
+
 async def select_ingredients_by_name(uuids: list[str]) -> None:
-    """Marca items del canvas como ingredientes a través del Dialog Modal de Flow, buscando por UUID."""
+    """Seleccionar por UUID o por ASB completo observado en la tarjeta de ese UUID."""
     page = await get_page()
-    PANEL_RECURSOS = 'div[role="dialog"]:has(input[placeholder*="Buscar"]), div[role="dialog"]:has(input[placeholder*="Search"])'
-    
     for uuid in uuids:
-        encontrado = False
-        # Intentar hasta 3 veces con recarga de página intermedia si no se encuentra (para curación por retraso del backend)
-        for intento_busqueda in range(3):
+        key = _asset_asb_keys.get(uuid)
+        canvas_img = page.locator(f'img[data-media-id="{uuid}"]').first
+        if await canvas_img.count():
+            key = _asb_key(await canvas_img.get_attribute("src") or "") or key
+        panel = page.locator(SEL_PANEL_RECURSOS).first
+        if not await panel.is_visible():
             await page.locator(SEL_ADD_INGREDIENT).first.click()
-            await page.wait_for_timeout(2500)
-            
-            # Intentar buscar el ingrediente directamente en la pestaña activa
-            target_img = page.locator(PANEL_RECURSOS).locator(f'img[src*="{uuid}"]')
-            
-            if await target_img.count() == 0:
-                # Probar diferentes textos posibles para las pestañas de recursos en toda la página
-                for tab_text in ["Cargas", "Uploads", "Imágenes", "Images", "Todos", "All", "Lienzo", "Canvas"]:
-                    tab = page.locator('div, span, p, button, [role="tab"]').get_by_text(tab_text, exact=False).first
-                    if await tab.count() > 0:
-                        print(f"    [Robusto] Haciendo clic en pestaña: {tab_text}")
-                        await tab.click()
-                        await page.wait_for_timeout(2000)
-                        # Volver a verificar
-                        if await target_img.count() > 0:
-                            break
-            
-            # Si aún no se encuentra, realizar scroll vertical robusto para cargar elementos del virtual scroll
-            if await target_img.count() == 0:
-                print(f"    [Robusto] Iniciando scroll vertical en la lista del modal de recursos para UUID: {uuid}...")
-                for scroll_step in range(10):
-                    await page.evaluate(f"""() => {{
-                        const dialog = document.querySelector('{PANEL_RECURSOS}');
-                        if (!dialog) return;
-                        const divs = dialog.querySelectorAll('div');
-                        for (const div of divs) {{
-                            if (div.scrollHeight > div.clientHeight) {{
-                                div.scrollTop += 250;
-                            }}
-                        }}
-                    }}""")
-                    await page.wait_for_timeout(1200)
-                    if await target_img.count() > 0:
-                        print(f"    [Robusto] ¡Ingrediente encontrado tras scroll en paso {scroll_step+1}!")
-                        break
-            
-            if await target_img.count() > 0:
-                encontrado = True
+        await panel.wait_for(state="visible", timeout=8_000)
+        await _switch_panel_tab(page, re.compile(r"Todos|All", re.I))
+        search = panel.locator('input.search-input, input#add-menu-input').first
+        if await search.count():
+            await search.fill("")
+        await page.wait_for_timeout(1_000)
+        target = None
+        for step in range(12):
+            target = await _matching_asset_image(panel, uuid, key)
+            if target is not None:
                 break
-                
-            # Si no se encontró, cerramos el panel con Escape, esperamos y recargamos la página (auto-curación)
-            if intento_busqueda < 2:
-                print(f"    [Auto-Curación] Ingrediente {uuid} NO visible en intento {intento_busqueda+1}. Cerrando panel, esperando 5s y recargando página...")
-                await page.keyboard.press("Escape")
-                await page.wait_for_timeout(5000)
-                await page.reload()
-                await page.wait_for_timeout(5000)
-        
-        # Verificación final
-        if not encontrado:
-            # Tomar una captura para depurar
+            # Scroll únicamente en la lista del panel; nunca en la página de fondo.
+            listing = panel.get_by_role("listbox").first
+            if not await listing.count():
+                break
+            await listing.evaluate("el => { el.scrollTop += Math.max(el.clientHeight * 0.8, 200); }")
+            await page.wait_for_timeout(400)
+        if target is None:
             from pathlib import Path
-            scratch_dir = Path("scratch")
-            scratch_dir.mkdir(parents=True, exist_ok=True)
+            Path("scratch").mkdir(exist_ok=True)
             await page.screenshot(path="scratch/select_ingredient_error.png")
-            print("    [ERROR] Captura del diálogo de recursos guardada en scratch/select_ingredient_error.png")
             await page.keyboard.press("Escape")
-            await page.wait_for_timeout(1000)
-            raise ValueError(f"No se encontró el ingrediente con UUID {uuid} in el proyecto.")
-            
-        await target_img.first.click()
-        await page.wait_for_timeout(1500)
-        
-        # Buscar el botón 'Agregar a la instrucción' o su equivalente en inglés dentro del panel flotante
-        import re
-        add_btn = page.locator(PANEL_RECURSOS).locator('button, [role="button"]').filter(
-            has_text=re.compile(r"(Agregar a la instrucción|Add to instrucción|Add to instruction|Add to prompt)", re.IGNORECASE)
-        ).first
-        
-        try:
-            # Esperar a que el botón de agregar esté visible en la previsualización
-            await add_btn.wait_for(state="visible", timeout=6000)
-            await add_btn.click()
-            await page.wait_for_timeout(1000)
-        except Exception:
-            # Si no se encuentra o ya se cerró el panel, usar Escape como fallback
+            raise RuntimeError(f"No se encontró el frame {uuid} en el panel; ASB conocido={bool(key)}")
+        await target.click()
+        await page.wait_for_timeout(500)
+        attached = page.get_by_role("button", name=re.compile(r"^Ingrediente(?: de imagen)?$|^Ingredient(?: image)?$"))
+        if await _matching_asset_image(attached, uuid, key) is None:
+            if await panel.is_visible():
+                add = panel.get_by_role("button", name=re.compile(r"Agregar a la instrucción|Add to prompt|Add to instruction", re.I)).first
+                await add.wait_for(state="visible", timeout=5_000)
+                await add.click()
+        if await panel.is_visible():
             await page.keyboard.press("Escape")
-            await page.wait_for_timeout(1000)
+        for attempt in range(20):
+            if await _matching_asset_image(attached, uuid, key) is not None:
+                print(f"    [ingrediente] Frame adjunto verificado: {uuid}")
+                break
+            await page.wait_for_timeout(250)
+        else:
+            raise RuntimeError(f"No se confirmó el frame adjunto {uuid}; generación detenida.")
 
 
 # ── Voz nativa: pestaña "Voces" del panel de recursos ────────────────────────
@@ -102,6 +96,7 @@ async def select_ingredients_by_name(uuids: list[str]) -> None:
 # concreta (y no con una distinta en cada clip) hay que cambiar a "Voces",
 # buscarla por nombre y confirmar con "Seleccionar voz".
 SEL_PANEL_RECURSOS = (
+    'flow-add-menu-popover-content, '
     'div[role="dialog"]:has(input[placeholder*="Buscar"]), '
     'div[role="dialog"]:has(input[placeholder*="Search"])'
 )
@@ -277,17 +272,31 @@ async def _await_user_rights_notice(page, timeout_ms: int = 300_000) -> None:
     await page.wait_for_timeout(1_500)
 
 
-async def upload_standalone_image(image_path: str) -> None:
+async def upload_standalone_image(image_path: str) -> str:
     """Sube una imagen al canvas directamente (modo imagen). Flujo 5."""
     page = await get_page()
     
+    # Cerrar panel de configuración o visores si quedaron abiertos
+    try:
+        settings_panel = page.locator('flow-prompt-box-settings')
+        if await settings_panel.count() > 0 and await settings_panel.first.is_visible():
+            await page.keyboard.press("Escape")
+            await page.wait_for_timeout(500)
+    except Exception:
+        pass
+
     # 1. Contar elementos en canvas antes de subir para tener baseline
-    pre_upload_cards = await page.locator('[aria-roledescription="draggable"]').count()
+    pre_upload_cards = await page.locator('flow-grid-tile-container, flow-tile-container, [aria-roledescription="draggable"]').count()
+    from .media import MEDIA_KEY_JS
+    previous=set()
+    for image in await page.locator('flow-grid-tile-container img, flow-tile-container img').all():
+        key=await image.evaluate(MEDIA_KEY_JS)
+        if key: previous.add(key)
     
-    # 2. Esperar al boton Crear y click
-    await page.wait_for_selector(SEL_ADD_INGREDIENT, state="visible", timeout=8_000)
+    # 2. Esperar al boton de añadir recursos y click
+    await page.wait_for_selector(SEL_ADD_INGREDIENT, state="visible", timeout=15_000)
     await page.locator(SEL_ADD_INGREDIENT).first.click()
-    await page.wait_for_timeout(2_000)
+    await page.locator(SEL_PANEL_RECURSOS).first.wait_for(state="visible", timeout=8_000)
     
     # 3. Volver a "Todos": si la última pestaña usada fue "Voces" (al fijar la
     #    voz nativa), el botón de subir no existe en el panel.
@@ -295,8 +304,8 @@ async def upload_standalone_image(image_path: str) -> None:
 
     # 4. Click en Cargar medios / Subir imagen
     import re
-    upload_btn = page.locator('button, [role="button"]').filter(
-        has_text=re.compile(r"(Cargar medios|Upload media|Subir imagen)", re.IGNORECASE)
+    upload_btn = page.locator(SEL_PANEL_RECURSOS).first.locator('button, [role="button"]').filter(
+        has_text=re.compile(r"(Cargar contenido multimedia|Cargar medios|Subir archivo multimedia|Upload media|Subir imagen)", re.IGNORECASE)
     ).first
     
     if await upload_btn.count() == 0:
@@ -317,7 +326,7 @@ async def upload_standalone_image(image_path: str) -> None:
     # 4. Esperar de forma dinámica y rigurosa usando la cuenta previa (Igual que en test-flow 5)
     await page.wait_for_function(
         f"""() => {{
-            const cards = document.querySelectorAll('[aria-roledescription="draggable"]');
+            const cards = document.querySelectorAll('flow-grid-tile-container, flow-tile-container, [aria-roledescription="draggable"]');
             if (cards.length <= {pre_upload_cards}) return false;
             const img = cards[0].querySelector('img');
             return img && img.complete && img.naturalWidth > 0;
@@ -328,61 +337,122 @@ async def upload_standalone_image(image_path: str) -> None:
     # 5. Cerrar el panel presionando Escape una vez confirmado el upload en el canvas
     await page.keyboard.press("Escape")
     await page.wait_for_timeout(1000)
+    for image in await page.locator('flow-grid-tile-container img, flow-tile-container img').all():
+        key=await image.evaluate(MEDIA_KEY_JS)
+        if key and key not in previous:
+            return key
+    raise RuntimeError('Uploaded image identity missing; generation stopped')
 
 
 
 async def get_canvas_count() -> int:
     """Retorna cantidad actual de items en el canvas."""
     page = await get_page()
-    return await page.locator('[aria-roledescription="draggable"]').count()
+    return await page.locator('flow-grid-tile-container, flow-tile-container, [aria-roledescription="draggable"]').count()
 
 
-SEL_SLOTS_INICIAR = 'div:text-is("Iniciar")'
-SEL_SLOTS_FIN = 'div:text-is("Fin")'
+SEL_SLOTS_INICIAR = 'button.empty-chip:has-text("Iniciar"):visible, button.empty-chip:has-text("Inicio"):visible, div:text-is("Iniciar"):visible'
+SEL_SLOTS_FIN = 'button.empty-chip:has-text("Fin"):visible, div:text-is("Fin"):visible'
 SEL_UPLOAD_BTN = ':text-is("Subir imagen")'
-SEL_SLOT_LOADED = 'img[alt*="contenido multimedia"]'
+SEL_SLOT_LOADED = '.ingredient-bar-container img'
 
-async def upload_frame(file_path: str, slot: str = "initial") -> None:
+async def upload_frame(file_path: str, slot: str = "initial") -> dict:
     """Sube un frame para modo Fotogramas. slot: 'initial' o 'final'."""
     page = await get_page()
-    
-    await page.wait_for_selector(SEL_SLOTS_INICIAR, state="visible", timeout=10000)
-    target_slot = page.locator(SEL_SLOTS_INICIAR) if slot == "initial" else page.locator(SEL_SLOTS_FIN)
-    
-    initial_count = await page.locator(SEL_SLOT_LOADED).count()
-    await target_slot.click()
+    from pathlib import Path
+    if slot not in ('initial','final') or not Path(file_path).is_file():
+        raise ValueError('Valid slot and existing frame file required')
+    # Current Flow keeps the previous frame after submit. Replace the requested
+    # slot explicitly; never count any loaded image as proof of this upload.
+    slots=page.locator('.ingredient-bar-container .frame-trigger')
+    await slots.first.wait_for(state='visible',timeout=10_000)
+    target=slots.nth(0 if slot=='initial' else 1)
+    loaded=target.locator('button.chip-container')
+    if await loaded.count():
+        await loaded.click()
+    target_slot=target.locator('button.empty-chip')
+    await target_slot.first.wait_for(state="visible", timeout=10000)
+    from .media import MEDIA_KEY_JS
+    before=set()
+    for img in await page.locator('flow-grid-tile-container img, flow-tile-container img').all():
+        key=await img.evaluate(MEDIA_KEY_JS)
+        if key: before.add(key)
+    await target_slot.first.click()
     await page.wait_for_timeout(2000)
-    
+
     async with page.expect_file_chooser(timeout=5000) as fc_info:
         import re
-        upload_btn = page.locator('button, [role="button"], div').filter(
-            has_text=re.compile(r"(Cargar medios|Upload media|Subir imagen)", re.IGNORECASE)
+        upload_btn = page.locator('button, [role="button"]').filter(
+            has_text=re.compile(r"(Cargar contenido multimedia|Cargar medios|Subir archivo multimedia|Upload media|Subir imagen)", re.IGNORECASE)
         ).first
         if await upload_btn.count() == 0:
             raise Exception("Botón de subida ('Cargar medios' / 'Upload') no encontrado para el slot.")
         await upload_btn.click(force=True)
     file_chooser = await fc_info.value
     await file_chooser.set_files(file_path)
-    
-    await page.wait_for_function(
-        f"""() => {{
-            const imgs = document.querySelectorAll('{SEL_SLOT_LOADED}');
-            if (imgs.length <= {initial_count}) return false;
-            return [...imgs].some(img => img.complete && img.naturalWidth > 0);
-        }}""",
-        timeout=60000
-    )
+    await _await_user_rights_notice(page)
+
+    # A preview of the previous upload can stay visible while the new upload
+    # is still processing. Never confirm that stale preview.
+    await page.wait_for_function("""before => {
+        const key = """ + MEDIA_KEY_JS + """;
+        return [...document.querySelectorAll('flow-grid-tile-container img, flow-tile-container img')]
+          .some(img => img.complete && img.naturalWidth > 0 && key(img) && !before.includes(key(img)));
+    }""", arg=list(before), timeout=90_000)
+    # The picker retains its previously highlighted image. Select the uploaded
+    # card by observed identity, rather than clicking its generic confirmation.
+    uploaded_key=None
+    for candidate in await page.locator('flow-grid-tile-container img, flow-tile-container img').all():
+        candidate_key=await candidate.evaluate(MEDIA_KEY_JS)
+        if candidate_key and candidate_key not in before:
+            uploaded_key=candidate_key
+            break
+    if uploaded_key is None:
+        raise RuntimeError('Uploaded frame card missing; generation stopped')
+    picker_image=page.locator(f'flow-add-menu-asset-item img[src*="{uploaded_key}"]')
+    await picker_image.first.wait_for(state='visible',timeout=20_000)
+    preview=page.locator('img.detail-preview-image').first
+    if not await preview.count() or await preview.evaluate(MEDIA_KEY_JS)!=uploaded_key:
+        await picker_image.first.click()
+    await preview.wait_for(state='visible',timeout=15_000)
+    await page.wait_for_function("""expected => {
+        const image=document.querySelector('img.detail-preview-image');
+        const key="""+MEDIA_KEY_JS+""";
+        return image && image.complete && image.naturalWidth>0 && key(image)===expected;
+    }""",arg=uploaded_key,timeout=20_000)
+
+    # La vista previa nueva exige confirmar antes de adjuntar el fotograma.
+    from playwright.async_api import TimeoutError as PlaywrightTimeoutError
+    add_btn = page.locator('button, [role="button"]').filter(
+        has_text=re.compile(r"(Añadir a petición|Agregar a la instrucción|Add to prompt|Add to instruction)", re.IGNORECASE)
+    ).first
+    try:
+        await add_btn.wait_for(state="visible", timeout=8_000)
+    except PlaywrightTimeoutError:
+        pass  # Algunas versiones adjuntan el archivo sin vista previa.
+    else:
+        await add_btn.click()
+        await add_btn.wait_for(state="hidden", timeout=15_000)
+
+    image=target.locator('img').first
+    await image.wait_for(state='visible',timeout=60_000)
+    await image.evaluate('img => img.decode()')
+    key=await image.evaluate(MEDIA_KEY_JS)
+    if key!=uploaded_key:
+        raise RuntimeError('Attached frame is not the newly uploaded asset; generation stopped')
+    print(f'    [frame] {slot}: newly uploaded asset verified')
+    return {'slot':slot,'file':str(Path(file_path).resolve()),'asset_id':key}
 
 
 async def select_frame_from_project(uuid: str, slot: str = "initial") -> None:
     """Selecciona un frame existente del proyecto para modo Fotogramas."""
     page = await get_page()
     
-    await page.wait_for_selector(SEL_SLOTS_INICIAR, state="visible", timeout=10000)
     target_slot = page.locator(SEL_SLOTS_INICIAR) if slot == "initial" else page.locator(SEL_SLOTS_FIN)
+    await target_slot.first.wait_for(state="visible", timeout=10000)
     
     initial_count = await page.locator(SEL_SLOT_LOADED).count()
-    await target_slot.click()
+    await target_slot.first.click()
     await page.wait_for_timeout(2000)
     
     # Buscar la imagen en el dropup por UUID dentro del diálogo modal
@@ -397,7 +467,7 @@ async def select_frame_from_project(uuid: str, slot: str = "initial") -> None:
     # Confirmar selección con el botón 'Agregar a la instrucción'
     import re
     add_btn = page.locator('button, [role="button"]').filter(
-        has_text=re.compile(r"(Agregar a la instrucción|Add to instruction|Add to prompt)", re.IGNORECASE)
+        has_text=re.compile(r"(Añadir a petición|Agregar a la instrucción|Add to instruction|Add to prompt)", re.IGNORECASE)
     ).first
     if await add_btn.count() > 0:
         await add_btn.click()
@@ -423,18 +493,26 @@ async def capture_newest_asset_name(label: str, is_video: bool = False) -> str:
     page = await get_page()
     
     # Flow prepende, así que .first siempre es el asset recién generado.
-    card = page.locator('[aria-roledescription="draggable"]').first
+    card = page.locator('flow-grid-tile-container, flow-tile-container, [aria-roledescription="draggable"]').first
     
     if is_video:
         element = card.locator('video').first
     else:
         element = card.locator('img').first
     
+    media_id = await element.get_attribute("data-media-id")
+    if media_id and re.fullmatch(r"[a-f0-9-]{36}", media_id):
+        key = _asb_key(await element.get_attribute("src") or "")
+        if key:
+            _asset_asb_keys[media_id] = key
+        capture_name(label, media_id)
+        return media_id
+
     src = await element.get_attribute("src")
     if not src:
         raise ValueError("No se pudo obtener el atributo src del asset más reciente.")
         
-    match = re.search(r'[?&]name=([a-f0-9-]{36})', src)
+    match = re.search(r'(?:[?&]name=|/(?:image|video)/)([a-f0-9-]{36})', src)
     if not match:
         raise ValueError(f"No se encontró UUID en el src: {src}")
         

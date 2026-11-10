@@ -95,7 +95,10 @@ LA MORALEJA (una frase, 15-25 palabras):
 | 10 | **MORALEJA** | El que aprendió | Frase de sabiduría, 15-25 palabras. **Cierra. Sin cliffhanger.** |
 
 Rango válido: **9-11 escenas**. Nunca menos de 9. Cada clip cuesta créditos en
-Flow, así que 10 es el default.
+Flow, así que 10 es el default. Referencia al 2026-11-09: Omni 1.2 Flash cobra
+**3 créditos por segundo** a 720p (un clip de 8s = 24; el video de ~76s ≈ 230).
+Las imágenes (láminas y frames) usan 0 créditos. Flow muestra el costo exacto
+antes de generar y puede cambiarlo.
 
 **Presupuesto:** 200-250 palabras habladas en total, 20-25 por clip. El formato
 es **denso de habla, no de trama**: UNA sola idea central, y lo que crece es el
@@ -364,9 +367,9 @@ Ver `examples/guion_dramas.json` para un guion completo de 10 beats.
 | `scenes[].beat` | Documental, ayuda a auditar el arco |
 | `scenes[].characters_in_scene` | Labels en cuadro. **Máx 2, y solo uno habla** |
 | `scenes[].silent` | **Obligatorio en toda escena sin diálogo** |
-| `scenes[].duration` | `"4s"`, `"6s"`, `"8s"` (default) o `"10s"`. **Solo Omni Flash las respeta** |
-| `scenes[].media_model` | `"Omni Flash"` (default), `"Veo 3.1 - Lite"` o `"Veo 3.1 - Fast"` |
-| `scenes[].image_model` | `"Nano Banana 2"` (default) o `"Nano Banana Pro"` |
+| `scenes[].duration` | `"4s"`, `"6s"`, `"8s"` (default) o `"10s"`. **Solo los modelos Omni las respetan** |
+| `scenes[].media_model` | `"Omni Flash"` (default; hoy es **Omni 1.2 Flash**) o `"Veo 3.1 - Lite"`. Flow retira el 5-dic-2026 `"Omni 1.1 Flash"`, `"Veo 3.1 - Fast"` y `"Veo 3.1 - Quality"` |
+| `scenes[].image_model` | `"Nano Banana 2"` (default; hoy selecciona **Nano Banana 2.1**), `"Nano Banana 2 Lite"` o `"Nano Banana Pro"` |
 | `scenes[].media_prompt` | El frame, CON `@menciones`, sin diálogo |
 | `scenes[].motion_prompt` | La animación, SIN `@`, con el monólogo |
 

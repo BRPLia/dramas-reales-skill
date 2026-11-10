@@ -61,8 +61,10 @@ from motor.mentions import mentioned_labels
 FLOW_URL = "https://labs.google/fx/es-419/tools/flow"
 
 DURACIONES_VALIDAS = {"4s", "6s", "8s", "10s"}
-MODELOS_VIDEO = {"Omni Flash", "Veo 3.1 - Lite", "Veo 3.1 - Fast", "Veo 3.1 - Quality"}
-MODELOS_IMAGEN = {"Nano Banana 2", "Nano Banana Pro", "Imagen 4"}
+# "Omni Flash" = el Omni vigente (hoy 1.2). Flow retira el 5-dic-2026 Omni 1.1 y Veo Fast/Quality.
+MODELOS_VIDEO = {"Omni Flash", "Omni 1.2 Flash", "Omni 1.1 Flash", "Veo 3.1 - Lite", "Veo 3.1 - Fast", "Veo 3.1 - Quality"}
+# "Nano Banana 2" ya no existe en Flow: el provider selecciona la 2.1.
+MODELOS_IMAGEN = {"Nano Banana 2", "Nano Banana 2.1", "Nano Banana 2 Lite", "Nano Banana Pro"}
 
 
 # ---------------------------------------------------------------------------
@@ -120,8 +122,8 @@ def validar_guion(guion: dict) -> list[str]:
         modelo = scene.get("media_model", config.VIDEO_MODEL)
         if modelo not in MODELOS_VIDEO:
             problemas.append(f"{pre}: media_model '{modelo}' desconocido (usa {sorted(MODELOS_VIDEO)})")
-        if modelo != "Omni Flash" and dur not in (None, "8s"):
-            problemas.append(f"{pre}: solo Omni Flash respeta 'duration'; {modelo} genera 8s fijos")
+        if not modelo.startswith("Omni") and dur not in (None, "8s"):
+            problemas.append(f"{pre}: solo los modelos Omni respetan 'duration'; {modelo} genera 8s fijos")
         img = scene.get("image_model", config.IMAGE_MODEL)
         if img not in MODELOS_IMAGEN:
             problemas.append(f"{pre}: image_model '{img}' desconocido (usa {sorted(MODELOS_IMAGEN)})")
@@ -182,6 +184,7 @@ def session_exists() -> bool:
 # ---------------------------------------------------------------------------
 async def cmd_login(_args) -> int:
     from playwright.async_api import async_playwright
+    from flow_provider.project import NEW_PROJECT_BUTTON
 
     profile = Path(config.FLOW_CHROME_PROFILE)
     profile.mkdir(parents=True, exist_ok=True)
@@ -206,7 +209,7 @@ async def cmd_login(_args) -> int:
             await page.wait_for_timeout(3000)
             url = page.url
             try:
-                ready = await page.locator('button:has-text("Proyecto nuevo")').count() > 0
+                ready = await page.get_by_role("button", name=NEW_PROJECT_BUTTON).count() > 0
             except Exception:
                 ready = False
             if ready and "accounts.google" not in url:

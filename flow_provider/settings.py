@@ -7,13 +7,13 @@ para que sea portable: descargar la carpeta, loguearse una vez y listo.
 import os
 from pathlib import Path
 
-base_dir = Path(__file__).parent.parent.resolve()
 try:
     from dotenv import load_dotenv
+    base_dir = Path(__file__).parent.parent.resolve()
     if (base_dir / ".env").exists():
         load_dotenv(base_dir / ".env")
 except Exception:
-    pass
+    base_dir = Path(__file__).parent.parent.resolve()
 
 # Mostrar el navegador (recomendado: false = visible). En CI se puede poner true.
 FLOW_HEADLESS = os.getenv("FLOW_HEADLESS", "false").lower() == "true"
