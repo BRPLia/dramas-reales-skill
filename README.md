@@ -50,6 +50,7 @@ muestra para que lo apruebes y lanza:
 
 ```bash
 python generar.py check mi_guion.json      # valida GRATIS, sin gastar créditos
+python generar.py laminas mi_guion.json    # crea solo los personajes y lugares (imágenes, 0 créditos)
 python generar.py video mi_guion.json      # el video final ya unido
 python generar.py recursos mi_guion.json   # o solo los clips, para tu editor
 ```
@@ -66,6 +67,18 @@ Las láminas de cada personaje y cada locación se guardan en `recursos/`. Si un
 guion nuevo usa el mismo label (`suegra_dona`, `set_casa_abuela`), sale **la
 misma cara y la misma casa**. Así es como esto se convierte en una serie con
 parte 1, parte 2 y parte 3.
+
+**Nuevo en v2 — memoria de personajes:**
+
+```bash
+python generar.py laminas mi_guion.json   # crea las láminas y se detiene: revísalas antes de pagar videos
+python generar.py personajes              # lista quién está guardado, con su ficha (ropa y voz)
+```
+
+Cada personaje se guarda con su ficha en `recursos/personajes.json`. Para
+reusarlo, pídele a tu agente «otra historia con la misma cocinera»: verá que ya
+existe y no la vuelve a crear. Si una lámina salió mal (letras en la ropa, lentes
+que tapan los ojos), bórrala de `recursos/` y vuelve a correr `laminas`.
 
 ## Subtítulos (opcionales)
 

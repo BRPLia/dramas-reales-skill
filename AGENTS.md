@@ -73,10 +73,12 @@ Cambia las tres propuestas cada vez. Sácalas de los temas que rinden en
 `SKILL.md`: conflicto por un **recurso** (trabajo, casa, herencia, dinero,
 tiempo), sin violencia.
 
-**Paso 2 — Escribe el guion.** Rellena primero la plantilla de 6 líneas
+**Paso 2 — Escribe el guion.** Corre antes `python generar.py personajes`: si el
+usuario quiere un personaje que ya existe, reúsalo con el mismo label y su ficha
+copiada tal cual. Rellena primero la plantilla de 6 líneas
 (abusador / víctima / recurso / creencia falsa / objeto gatillo / moraleja) y
 después los 10 beats. Sigue `SKILL.md` al pie de la letra: regla del monólogo,
-duraciones variadas (`8-8-10-8-8-8-8-6-4-10`), wardrobe-lock verbatim, una sola
+líneas que caben en su clip, wardrobe-lock verbatim, una sola
 locación por `media_prompt`, cero `@` en los `motion_prompt`, `"silent": true` en
 la escena muda.
 
@@ -92,11 +94,15 @@ Y pregunta: *¿Apruebas el guion? Si sí, lo valido y lanzo la generación.*
 `python generar.py check mi_guion.json`. Arregla lo que marque. Te dirá también
 qué láminas se **reusan** de `recursos/` y cuántos créditos vas a gastar.
 
-**Paso 5 — Genera.** Pregunta qué quiere:
+**Paso 5 — Crea y enseña las láminas (gratis):**
+`python generar.py laminas mi_guion.json`. Muéstrale al usuario las imágenes
+nuevas de `recursos/` y espera su OK. Si una salió mal, bórrala y repite.
+
+**Paso 6 — Genera.** Pregunta qué quiere:
 - `python generar.py video mi_guion.json` → el video final ya unido.
 - `python generar.py recursos mi_guion.json` → solo los clips, para su editor.
 
-**Paso 6 — Entrega** lo de `outputs/<proyecto>/` y reporta `status.json`.
+**Paso 7 — Entrega** lo de `outputs/<proyecto>/` y reporta `status.json`.
 
 ## Reglas
 - **Nunca lances una generación sin el OK del usuario:** cada corrida son 10

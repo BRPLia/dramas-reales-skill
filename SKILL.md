@@ -34,6 +34,8 @@ El estilo está **hardcodeado**. Tú no diseñas el pipeline: escribes el
 | Comando | Qué hace |
 |---|---|
 | `python generar.py check <guion.json>` | **Valida sin gastar créditos.** Córrelo SIEMPRE antes de generar. |
+| `python generar.py laminas <guion.json>` | Crea **solo las láminas** (personajes y escenarios) que falten. Son imágenes: 0 créditos. Revísalas antes de pagar los clips. |
+| `python generar.py personajes` | Lista los personajes y escenarios **guardados**, con su ficha, para reusarlos en otro video. |
 | `python generar.py recursos <guion.json>` | Solo los clips `escena1.mp4 … escena10.mp4` para que el usuario los una en su editor. |
 | `python generar.py video <guion.json>` | El **video final** ya unido con Remotion: limpio, sin marcas ni texto. |
 | `python generar.py clean [proyecto]` | Borra resultados de `outputs/`. |
@@ -44,8 +46,8 @@ Salida en `outputs/<fecha>_<titulo>/`.
 
 ## 🧠 LA REGLA DEL MONÓLOGO (el corazón del estilo)
 
-> **Un solo personaje habla por clip. Habla en voz alta, corrido, 20-25
-> palabras. Nadie le contesta dentro de esa toma.**
+> **Un solo personaje habla por clip. Habla en voz alta, con una línea que
+> cabe en su ventana de habla. Nadie le contesta dentro de esa toma.**
 
 No es negociable, y por dos razones:
 
@@ -100,21 +102,39 @@ Flow, así que 10 es el default. Referencia al 2026-11-09: Omni 1.2 Flash cobra
 Las imágenes (láminas y frames) usan 0 créditos. Flow muestra el costo exacto
 antes de generar y puede cambiarlo.
 
-**Presupuesto:** 200-250 palabras habladas en total, 20-25 por clip. El formato
-es **denso de habla, no de trama**: UNA sola idea central, y lo que crece es el
-tiempo que le das a saborearla.
+**Presupuesto:** no hay cuota de palabras. Cada línea tiene que **caber en su
+ventana de habla** (la duración del clip menos ~2s). Una línea demasiado larga
+sale cortada o atropellada; `check` te avisa. UNA sola idea central por video.
 
 ### El ritmo: elige la duración por beat
-Nunca pongas todo en 8s — una duración plana se siente robótica.
+Diez clips de 8s son una base válida. Varía solo cuando la acción lo pida.
 
 | Dur | Palabras | Para qué |
 |---|---|---|
 | **4s** | 0-8 | Pattern interrupt puro. Una reacción sin diálogo, un objeto que se queda sin recoger. Úsalo 1 vez. Sin diálogo → `"silent": true` |
-| **6s** | 12-18 | Golpe seco. La sentencia del testigo, la decisión. Corta antes de que respires |
-| **8s** | 20-25 | El caballo de batalla. La mayoría de tus beats |
-| **10s** | 26-34 | Aire. La creencia falsa (arrogante y cómoda) y la moraleja (cierra sin prisa) |
+| **6s** | 8-13 | Golpe seco. La sentencia del testigo, la decisión. Corta antes de que respires |
+| **8s** | 14-20 | El caballo de batalla. La mayoría de tus beats |
+| **10s** | 18-26 | Aire. La creencia falsa (arrogante y cómoda) y la moraleja (cierra sin prisa) |
 
 **Curva recomendada:** `8-8-10-8-8-8-8-6-4-10`.
+
+### Lo que separó a los videos que funcionaron
+Salió de comparar 24 publicaciones de una página nueva (los mejores: 42s de
+visualización media; los peores: 20s, con la caída fuerte entre los segundos 4
+y 6). Es una observación, no una garantía:
+
+- **Primera frase:** relación entre los personajes + abuso concreto + el objeto.
+  Nada de presentar la situación: el abuso ya está pasando.
+- **Un objeto que se puede tocar** (la comida, la camioneta, el cuaderno) visible
+  desde las primeras escenas. Mostrar el problema, no hablar de él.
+- **Cada escena añade un hecho o cambia una decisión.** Borra los discursos
+  seguidos que repiten la misma indignación.
+- **Dos personajes y un lugar** como base. Un tercero solo si tiene función.
+- **Planta la prueba o al testigo antes del final.** Que no aparezca una
+  autoridad de la nada a resolver todo por su título.
+- **La víctima decide y se ve la consecuencia:** devolver una herramienta,
+  abrir una llave, perder un favor. Proporcionada, nunca física.
+- **Ortografía completa en el diálogo** (acentos y eñes): mejora la pronunciación.
 
 ### La moraleja
 Dos mitades: **el error** + **la ley general**.
@@ -222,8 +242,19 @@ el segundo **reusa silenciosamente la lámina del primero** y tu descripción
 nueva se ignora.
 
 **Nombra por historia, no por tipo:** `set_casa_abuela`, `set_puesto_tamales`,
-`mujer_cocinera_tamales`. Antes de escribir el guion, mira qué hay en
-`recursos/` (`python generar.py check` te lo dice: qué se reusa y qué se genera).
+`mujer_cocinera_tamales`.
+
+**Memoria de personajes.** Cada lámina se guarda con su ficha (descripción y
+voz) en `recursos/personajes.json`. El flujo correcto es:
+
+1. `python generar.py personajes` → mira quién existe ya. Para **reusar** un
+   personaje en otra historia, usa el mismo label y copia su ficha tal cual.
+2. `python generar.py laminas <guion.json>` → crea solo lo que falta (0 créditos)
+   y **se detiene**. Enséñale las láminas al usuario.
+3. Si una salió mal (texto en la ropa, cara tapada), bórrala de `recursos/` y
+   repite el paso 2. Recién después lanza `video` o `recursos`.
+
+`check` avisa si un label ya existe con otra descripción.
 
 ### 5. Progresión temporal por luz
 El paso del tiempo se marca con la **hora del día**, no con texto en pantalla.
@@ -312,7 +343,7 @@ ACTION - timestamped beats (reset to 00:00 for this clip):
 
 AUDIO:
 The [descriptor + posición], with a [voz verbatim de characters[].voice],
-speaks aloud in Latin American Spanish: "[monólogo de 20-25 palabras]"
+speaks aloud in Latin American Spanish: "[línea que cabe en la ventana de habla]"
 Tone: [único lugar donde va lenguaje emocional].
 SFX/Ambience: [fuentes físicas concretas]. Music: No music.
 
@@ -402,6 +433,11 @@ afirma el daño**, no la estética.
 
 - ❌ Evita en diálogos: `morir`, `muerte`, `matar`, `te mató`, `accidente
   provocado`, `si me pasa algo fue ella`, amenazas explícitas de daño.
+- ❌ También se bloquea **exigir o quitar dinero de frente**. Verificado el
+  2026-11-12: `Desde hoy me das la mitad de lo que vendas` y `Dame la lata
+  completa, yo te guardo el dinero` no pasaron; `Me llevo estos tamales, no te
+  los pago` sí. Que el abuso sea sobre **cosas o trabajo**, no una exigencia de
+  dinero. Flow reembolsa la escena bloqueada y la skill te avisa al instante.
 - ✅ Un funeral o un duelo como **escenario** sí pasa.
 - ✅ Reencauza el conflicto a daños NO físicos: traición, abuso económico, robo,
   abandono, herencia, secreto. Que además es donde vive este formato.
@@ -437,7 +473,8 @@ afirma el daño**, no la estética.
 - [ ] Cada `media_prompt` menciona exactamente UNA locación `@set_*`.
 - [ ] Cero `@` en los `motion_prompt`.
 - [ ] Toda escena sin diálogo tiene `"silent": true`.
-- [ ] 200-250 palabras habladas totales; la moraleja tiene error + ley general.
+- [ ] Cada línea cabe en su clip (`check` sin avisos); la moraleja tiene error + ley general.
+- [ ] Las láminas se crearon con `laminas` y el usuario las revisó.
 - [ ] Ninguna línea afirma muerte o daño provocado.
 - [ ] **Test del espectador frío:** alguien que no leyó el título, ¿entiende la
       historia viendo los 10 clips con audio?

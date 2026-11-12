@@ -25,6 +25,7 @@ SEL_MORE_MENU    = 'button[aria-label="Más opciones"], button:has(:is(i, mat-ic
 # Selectores de error de generación — usar texto literal para evitar falsos positivos
 # con cards de loading que también tienen data-tile-id
 SEL_ERROR_TEXT = ':text("No se pudo generar")'
+SEL_POLICY_TEXT = ':text("incumpla nuestras políticas")'
 _ERROR_CARD_RE = re.compile(r"No se pudo generar|Se produjo un error", re.IGNORECASE)
 # La card de error trae tres botones; el útil es "Reutilizar instrucción":
 # devuelve al campo TODA la instrucción, incluida la voz elegida.
@@ -133,6 +134,7 @@ async def _poll_until_ready(page, media_sel: str, pre_cards, pre_errors: int, ti
     guard = "true" if pre_cards is None else f"cards.length > {pre_cards}"
     is_video = "video" in media_sel
     tipo = "video" if is_video else "imagen"
+    pre_policy = await page.locator(SEL_POLICY_TEXT).count()
 
     js = f"""() => {{
         try {{
@@ -281,6 +283,12 @@ async def _poll_until_ready(page, media_sel: str, pre_cards, pre_errors: int, ti
         if await error_card_count(page) > pre_errors:
             print(f"    [wait] Detectada card de error de generación en Flow.")
             return "error"
+        # Bloqueo por políticas: reintentar la misma instrucción no sirve.
+        if await page.locator(SEL_POLICY_TEXT).count() > pre_policy:
+            raise Exception(
+                "Flow bloqueó esta generación por sus políticas (reembolsa los créditos). "
+                "Reescribe el diálogo o la acción de esta escena."
+            )
 
         await asyncio.sleep(2)
 

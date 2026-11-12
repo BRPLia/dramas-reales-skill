@@ -1,0 +1,159 @@
+{
+  "metadata": {
+    "title": "Cuando-quiso-cobrarle-la-banqueta",
+    "aspect_ratio": "9:16",
+    "language": "es",
+    "visual_mode": "realista_documental",
+    "subtitulos": false,
+    "characters": [
+      {
+        "label": "mujer_cocinera_tamales",
+        "description": "Ordinary woman in her late 30s from a working-class Latin American neighborhood, tired kind face with faint dark circles, no makeup, black hair pulled into a low braid, wearing a maroon short-sleeved t-shirt under a stained beige canvas apron with dark grease marks, plain jeans and worn grey sneakers, with NO lettering, NO numbers and NO printed graphics on any garment. natural available light, sharp focus, true-to-life skin texture and pores, lived-in worn environment, cluttered authentic props, blurred real crowd in the background, slightly desaturated warm grade, handheld phone camera at eye level, no cinematic color grading, no studio lighting, no beauty retouching",
+        "voice": "warm mid-pitch Latin American female voice, slightly tired, speaks softly and evenly"
+      },
+      {
+        "label": "hombre_dueno_local",
+        "description": "Heavy-set man in his 50s, thick black moustache, receding hair, sweat-darkened collar, a gold-toned wristwatch cutting into his wrist, wearing a short-sleeved beige button shirt stretched tight over a large belly with the buttons straining and gaping, dark work trousers and plastic sandals, with NO lettering, NO numbers and NO printed graphics on any garment. natural available light, sharp focus, true-to-life skin texture and pores, lived-in worn environment, cluttered authentic props, blurred real crowd in the background, slightly desaturated warm grade, handheld phone camera at eye level, no cinematic color grading, no studio lighting, no beauty retouching",
+        "voice": "deep relaxed middle-aged Latin American male voice, slightly nasal, unhurried, exhales with annoyance before speaking"
+      },
+      {
+        "label": "senora_clienta",
+        "description": "Ordinary woman in her 60s from the same neighborhood, short grey permed hair, reading glasses low on her nose, a plain lilac blouse and a dark cardigan, carrying a woven plastic shopping basket, with NO lettering, NO numbers and NO printed graphics on any garment. natural available light, sharp focus, true-to-life skin texture and pores, lived-in worn environment, cluttered authentic props, blurred real crowd in the background, slightly desaturated warm grade, handheld phone camera at eye level, no cinematic color grading, no studio lighting, no beauty retouching",
+        "voice": "firm older Latin American female voice, blunt and unimpressed"
+      }
+    ],
+    "set_references": {
+      "set_puesto_tamales": "A cramped street food stall inside a busy Latin American market, two large dented steel pots steaming on a gas burner, a folding table with stacked corn husks and a plastic tub of dough, peeling green and cream painted walls, low plastic stools, a bare bulb hanging from a cable, a faded illegible paper sign taped to the wall, NO people, no readable text, no lettering, no prices, no brand labels anywhere. natural available light, sharp focus, lived-in worn environment, cluttered authentic props, slightly desaturated warm grade, handheld phone camera at eye level, no cinematic color grading, no studio lighting",
+      "set_banqueta_puestito": "A small humble improvised food stand on a quiet sidewalk at the corner of a residential street, one folding table with a checkered plastic cover, a single steel pot with a cloth over the lid, a styrofoam cooler, a stack of paper plates held down by a stone, a plastic stool, NO people, no readable text, no lettering, no prices, no brand labels anywhere. natural available light, sharp focus, lived-in worn environment, cluttered authentic props, slightly desaturated warm grade, handheld phone camera at eye level, no cinematic color grading, no studio lighting"
+    }
+  },
+  "scenes": [
+    {
+      "scene": 1,
+      "beat": "INJUSTICIA",
+      "characters_in_scene": [
+        "mujer_cocinera_tamales",
+        "hombre_dueno_local"
+      ],
+      "media_model": "Omni Flash",
+      "duration": "8s",
+      "image_model": "Nano Banana 2",
+      "media_prompt": "Render a medium two-shot, vertical 9:16. Photorealistic candid observational documentary footage of ordinary working-class Latin American people, filmed by a bystander at eye level. At @set_banqueta_puestito, @hombre_dueno_local stands on the left with one hand flat on her folding table and the other pointing down at the sidewalk, a satisfied half-smile; @mujer_cocinera_tamales stands on the right behind the single steel pot holding a serving spoon, mouth closed, a plain dented metal tin box with no lettering beside the pot. No readable text or lettering anywhere. Eye-level camera, flat bright morning daylight, slightly desaturated warm grade. natural available light, sharp focus, true-to-life skin texture and pores, lived-in worn environment, cluttered authentic props, blurred real crowd in the background, slightly desaturated warm grade, handheld phone camera at eye level, no cinematic color grading, no studio lighting, no beauty retouching",
+      "motion_prompt": "CLIP 1 of 10 - 8s - 9:16\nUse the attached frame as the composition, identity and wardrobe reference.\n\nSHOT: Eye-level handheld shot that slowly pushes in from the two-shot toward a chest-up framing of the heavy man on the left. No cuts.\n\nACTION - timestamped beats (reset to 00:00 for this clip):\n00:00-00:01: The heavy man on the left taps the folding table twice with his flat hand.\n00:01-00:07: He speaks continuously while pointing at the sidewalk and then at his own chest. The woman on the right does not speak; she keeps stirring the pot and lowers her eyes.\n00:07-00:08: He straightens up and wipes his hand on the front of his shirt.\n\nAUDIO:\nThe heavy man on the left, with a deep relaxed middle-aged Latin American male voice, slightly nasal, unhurried, exhales with annoyance before speaking, speaks aloud in Latin American Spanish: \"Mira nada más, mija. Pusiste tu puestito justo frente a mi local. Aquí el que manda soy yo.\"\nTone: condescendencia risueña.\nSFX/Ambience: a hand tapping a plastic tablecloth, steam from a pot, a quiet residential street, a passing bicycle. Music: No music.\n\nNegative Constraints: only one character speaks, the woman keeps her mouth closed; no subtitles, no caption bars, no on-screen text, no readable signs or lettering in the scene, no readable text on the tin box or the banknotes, no misspelled or invented words, no morphing, no wardrobe changes, consistent faces, no camera cuts, no watermark.\nKeep faces, wardrobe, lighting and spatial relationships consistent with the attached frame; follow SHOT for camera movement.\nOutput: 8s, 720p, 9:16."
+    },
+    {
+      "scene": 2,
+      "beat": "AGUANTE",
+      "characters_in_scene": [
+        "mujer_cocinera_tamales"
+      ],
+      "media_model": "Omni Flash",
+      "duration": "8s",
+      "image_model": "Nano Banana 2",
+      "media_prompt": "Render a medium shot, vertical 9:16. Photorealistic candid observational documentary footage of ordinary working-class Latin American people, filmed by a bystander at eye level. At @set_banqueta_puestito, @mujer_cocinera_tamales stands alone behind the folding table wrapping a tamale in a corn husk with both hands, looking down, a plain dented metal tin box with no lettering beside the pot. No readable text or lettering anywhere. Eye-level camera, flat bright morning daylight, slightly desaturated warm grade. natural available light, sharp focus, true-to-life skin texture and pores, lived-in worn environment, cluttered authentic props, blurred real crowd in the background, slightly desaturated warm grade, handheld phone camera at eye level, no cinematic color grading, no studio lighting, no beauty retouching",
+      "motion_prompt": "CLIP 2 of 10 - 8s - 9:16\nUse the attached frame as the composition, identity and wardrobe reference.\n\nSHOT: Static eye-level shot with subtle handheld drift. No cuts.\n\nACTION - timestamped beats (reset to 00:00 for this clip):\n00:00-00:01: She folds a corn husk around a tamale and sets it on the stack.\n00:01-00:07: She speaks quietly to herself while she keeps wrapping, without looking at the camera.\n00:07-00:08: She rests one hand on the lid of the metal tin box.\n\nAUDIO:\nThe woman alone behind the table, with a warm mid-pitch Latin American female voice, slightly tired, speaks softly and evenly, speaks aloud in Latin American Spanish: \"Apenas llevo un mes con mi puesto. No quiero pleitos con él. Pero esta banqueta no es suya.\"\nTone: cansancio y prudencia, piensa en voz alta.\nSFX/Ambience: corn husks rustling, steam, birds, a distant radio. Music: No music.\n\nNegative Constraints: only one character is present and only that character speaks; no subtitles, no caption bars, no on-screen text, no readable signs or lettering in the scene, no readable text on the tin box or the banknotes, no misspelled or invented words, no morphing, no wardrobe changes, consistent faces, no camera cuts, no watermark.\nKeep faces, wardrobe, lighting and spatial relationships consistent with the attached frame; follow SHOT for camera movement.\nOutput: 8s, 720p, 9:16."
+    },
+    {
+      "scene": 3,
+      "beat": "CREENCIA FALSA",
+      "characters_in_scene": [
+        "hombre_dueno_local"
+      ],
+      "media_model": "Omni Flash",
+      "duration": "10s",
+      "image_model": "Nano Banana 2",
+      "media_prompt": "Render a medium shot, vertical 9:16. Photorealistic candid observational documentary footage of ordinary working-class Latin American people, filmed by a bystander at eye level. Inside @set_puesto_tamales, @hombre_dueno_local sits alone on a low plastic stool leaning back with his belly forward, eating a tamale from a paper plate, both big pots behind him with their lids on and no steam, the market aisle behind him almost empty. No readable text or lettering anywhere. Eye-level camera, flat bright morning daylight, slightly desaturated warm grade. natural available light, sharp focus, true-to-life skin texture and pores, lived-in worn environment, cluttered authentic props, blurred real crowd in the background, slightly desaturated warm grade, handheld phone camera at eye level, no cinematic color grading, no studio lighting, no beauty retouching",
+      "motion_prompt": "CLIP 3 of 10 - 10s - 9:16\nUse the attached frame as the composition, identity and wardrobe reference.\n\nSHOT: Static eye-level shot with subtle handheld drift. No cuts.\n\nACTION - timestamped beats (reset to 00:00 for this clip):\n00:00-00:02: He takes a bite of the tamale and chews with his mouth half open.\n00:02-00:08: He speaks continuously with his mouth still half full, gesturing with the plate toward the street outside.\n00:08-00:10: He drops the plate on the table and licks his thumb.\n\nAUDIO:\nThe heavy man alone on the stool, with a deep relaxed middle-aged Latin American male voice, slightly nasal, unhurried, exhales with annoyance before speaking, speaks aloud in Latin American Spanish: \"La gente viene por mi esquina, no por ella. Sin mi local enfrente, nadie le compra un tamal. Me lo debe todo.\"\nTone: autosatisfacción tranquila, ni una gota de duda.\nSFX/Ambience: chewing, a paper plate dropped on a table, an almost empty market, a distant handcart. Music: No music.\n\nNegative Constraints: only one character is present and only that character speaks; no subtitles, no caption bars, no on-screen text, no readable signs or lettering in the scene, no readable text on the tin box or the banknotes, no misspelled or invented words, no morphing, no wardrobe changes, consistent faces, no camera cuts, no watermark.\nKeep faces, wardrobe, lighting and spatial relationships consistent with the attached frame; follow SHOT for camera movement.\nOutput: 10s, 720p, 9:16."
+    },
+    {
+      "scene": 4,
+      "beat": "ESCALADA 1",
+      "characters_in_scene": [
+        "mujer_cocinera_tamales",
+        "hombre_dueno_local"
+      ],
+      "media_model": "Omni Flash",
+      "duration": "8s",
+      "image_model": "Nano Banana 2",
+      "media_prompt": "Render a medium two-shot, vertical 9:16. Photorealistic candid observational documentary footage of ordinary working-class Latin American people, filmed by a bystander at eye level. At @set_banqueta_puestito, @hombre_dueno_local stands on the left holding a stack of four wrapped tamales against his chest with one arm, grinning; @mujer_cocinera_tamales stands on the right behind the pot with her open hand held out for payment, mouth closed. No readable text or lettering anywhere. Eye-level camera, flat bright morning daylight, slightly desaturated warm grade. natural available light, sharp focus, true-to-life skin texture and pores, lived-in worn environment, cluttered authentic props, blurred real crowd in the background, slightly desaturated warm grade, handheld phone camera at eye level, no cinematic color grading, no studio lighting, no beauty retouching",
+      "motion_prompt": "CLIP 4 of 10 - 8s - 9:16\nUse the attached frame as the composition, identity and wardrobe reference.\n\nSHOT: Eye-level handheld shot that slowly pushes in toward a chest-up framing of the heavy man on the left. No cuts.\n\nACTION - timestamped beats (reset to 00:00 for this clip):\n00:00-00:01: The heavy man on the left grabs one more tamale from the table and adds it to the stack in his arm.\n00:01-00:07: He speaks continuously while patting the stack of tamales. The woman on the right does not speak; she keeps her open hand held out and then slowly lowers it.\n00:07-00:08: He turns and takes one step away with the tamales.\n\nAUDIO:\nThe heavy man on the left, with a deep relaxed middle-aged Latin American male voice, slightly nasal, unhurried, exhales with annoyance before speaking, speaks aloud in Latin American Spanish: \"Me llevo estos tamales para probar. No te los pago, eh. Tómalo como la renta de hoy.\"\nTone: descaro alegre, como si hiciera un favor.\nSFX/Ambience: corn husks handled, steam, footsteps on a sidewalk, a dog barking far away. Music: No music.\n\nNegative Constraints: only one character speaks, the woman keeps her mouth closed; no subtitles, no caption bars, no on-screen text, no readable signs or lettering in the scene, no readable text on the tin box or the banknotes, no misspelled or invented words, no morphing, no wardrobe changes, consistent faces, no camera cuts, no watermark.\nKeep faces, wardrobe, lighting and spatial relationships consistent with the attached frame; follow SHOT for camera movement.\nOutput: 8s, 720p, 9:16."
+    },
+    {
+      "scene": 5,
+      "beat": "ESCALADA 2",
+      "characters_in_scene": [
+        "mujer_cocinera_tamales",
+        "hombre_dueno_local"
+      ],
+      "media_model": "Omni Flash",
+      "duration": "8s",
+      "image_model": "Nano Banana 2",
+      "media_prompt": "Render a tight two-shot, vertical 9:16. Photorealistic candid observational documentary footage of ordinary working-class Latin American people, filmed by a bystander at eye level. At @set_banqueta_puestito, @hombre_dueno_local stands on the left leaning forward with both thick hands on the edge of her folding table; @mujer_cocinera_tamales stands on the right behind the pot holding a plain dented metal tin box with no lettering against her apron with both hands, mouth closed, looking at him. No readable text or lettering anywhere. Eye-level camera, flat bright morning daylight, slightly desaturated warm grade. natural available light, sharp focus, true-to-life skin texture and pores, lived-in worn environment, cluttered authentic props, blurred real crowd in the background, slightly desaturated warm grade, handheld phone camera at eye level, no cinematic color grading, no studio lighting, no beauty retouching",
+      "motion_prompt": "CLIP 5 of 10 - 8s - 9:16\nUse the attached frame as the composition, identity and wardrobe reference.\n\nSHOT: Eye-level handheld shot that slowly pushes in toward a chest-up framing of the heavy man on the left. No cuts.\n\nACTION - timestamped beats (reset to 00:00 for this clip):\n00:00-00:01: The heavy man on the left leans his weight on the edge of the folding table.\n00:01-00:07: He speaks continuously while nodding toward the street behind him. The woman on the right does not speak; she holds the tin against her apron and shakes her head once.\n00:07-00:08: He straightens up and shrugs.\n\nAUDIO:\nThe heavy man on the left, with a deep relaxed middle-aged Latin American male voice, slightly nasal, unhurried, exhales with annoyance before speaking, speaks aloud in Latin American Spanish: \"Mañana cocinas otra vez en mi local, mija. Y te traes a tu clientela. Sola no vas a durar.\"\nTone: fastidio de quien se siente el jefe.\nSFX/Ambience: a folding table creaking, steam, a quiet street. Music: No music.\n\nNegative Constraints: only one character speaks, the woman keeps her mouth closed; no subtitles, no caption bars, no on-screen text, no readable signs or lettering in the scene, no readable text on the tin box or the banknotes, no misspelled or invented words, no morphing, no wardrobe changes, consistent faces, no camera cuts, no watermark.\nKeep faces, wardrobe, lighting and spatial relationships consistent with the attached frame; follow SHOT for camera movement.\nOutput: 8s, 720p, 9:16."
+    },
+    {
+      "scene": 6,
+      "beat": "EL LIMITE",
+      "characters_in_scene": [
+        "mujer_cocinera_tamales"
+      ],
+      "media_model": "Omni Flash",
+      "duration": "8s",
+      "image_model": "Nano Banana 2",
+      "media_prompt": "Render a medium shot, vertical 9:16. Photorealistic candid observational documentary footage of ordinary working-class Latin American people, filmed by a bystander at eye level. At @set_banqueta_puestito, @mujer_cocinera_tamales stands alone behind the folding table at the end of the day holding a plain dented metal tin box with no lettering against her chest with both arms, standing straight, looking directly ahead. No readable text or lettering anywhere. Eye-level camera, warm low golden late afternoon light, slightly desaturated warm grade. natural available light, sharp focus, true-to-life skin texture and pores, lived-in worn environment, cluttered authentic props, blurred real crowd in the background, slightly desaturated warm grade, handheld phone camera at eye level, no cinematic color grading, no studio lighting, no beauty retouching",
+      "motion_prompt": "CLIP 6 of 10 - 8s - 9:16\nUse the attached frame as the composition, identity and wardrobe reference.\n\nSHOT: Static eye-level shot with subtle handheld drift, very slight push in. No cuts.\n\nACTION - timestamped beats (reset to 00:00 for this clip):\n00:00-00:01: She lifts the metal tin box off the table and holds it against her chest.\n00:01-00:07: She speaks firmly, looking straight ahead for the first time.\n00:07-00:08: She puts the lid on the empty pot with one hand.\n\nAUDIO:\nThe woman alone behind the table, with a warm mid-pitch Latin American female voice, slightly tired, speaks softly and evenly, speaks aloud in Latin American Spanish: \"Ya le regalé años de trabajo. A su local no vuelvo. Mañana pregunto de quién es la banqueta.\"\nTone: decisión tranquila, se acabó el aguante.\nSFX/Ambience: coins shifting in a tin, a pot lid, evening street, crickets starting. Music: No music.\n\nNegative Constraints: only one character is present and only that character speaks; no subtitles, no caption bars, no on-screen text, no readable signs or lettering in the scene, no readable text on the tin box or the banknotes, no misspelled or invented words, no morphing, no wardrobe changes, consistent faces, no camera cuts, no watermark.\nKeep faces, wardrobe, lighting and spatial relationships consistent with the attached frame; follow SHOT for camera movement.\nOutput: 8s, 720p, 9:16."
+    },
+    {
+      "scene": 7,
+      "beat": "LA ALIADA",
+      "characters_in_scene": [
+        "senora_clienta",
+        "mujer_cocinera_tamales"
+      ],
+      "media_model": "Omni Flash",
+      "duration": "8s",
+      "image_model": "Nano Banana 2",
+      "media_prompt": "Render a medium two-shot, vertical 9:16. Photorealistic candid observational documentary footage of ordinary working-class Latin American people, filmed by a bystander at eye level. At @set_banqueta_puestito, @senora_clienta stands on the left with her basket on her arm, pointing with her thumb at the house wall right behind the stand; @mujer_cocinera_tamales stands on the right behind the table still holding a plain dented metal tin box with no lettering, mouth closed, listening. No readable text or lettering anywhere. Eye-level camera, warm low golden late afternoon light, slightly desaturated warm grade. natural available light, sharp focus, true-to-life skin texture and pores, lived-in worn environment, cluttered authentic props, blurred real crowd in the background, slightly desaturated warm grade, handheld phone camera at eye level, no cinematic color grading, no studio lighting, no beauty retouching",
+      "motion_prompt": "CLIP 7 of 10 - 8s - 9:16\nUse the attached frame as the composition, identity and wardrobe reference.\n\nSHOT: Eye-level handheld shot that slowly pushes in toward a chest-up framing of the older woman on the left. No cuts.\n\nACTION - timestamped beats (reset to 00:00 for this clip):\n00:00-00:01: The older woman on the left points with her thumb at the wall of the house behind them.\n00:01-00:07: She speaks briskly while tapping the folding table once. The woman on the right does not speak; she lowers the tin and lets out a breath.\n00:07-00:08: The older woman nods once and adjusts her basket.\n\nAUDIO:\nThe older woman on the left, with a firm older Latin American female voice, blunt and unimpressed, speaks aloud in Latin American Spanish: \"Esta banqueta es de mi casa, mija. Aquí te quedas. Y a mí no me pagas nada.\"\nTone: vecina que ya decidió, sin ceremonia.\nSFX/Ambience: a basket creaking, a knuckle on a plastic table, evening street. Music: No music.\n\nNegative Constraints: only one character speaks, the younger woman keeps her mouth closed; no subtitles, no caption bars, no on-screen text, no readable signs or lettering in the scene, no readable text on the tin box or the banknotes, no misspelled or invented words, no morphing, no wardrobe changes, consistent faces, no camera cuts, no watermark.\nKeep faces, wardrobe, lighting and spatial relationships consistent with the attached frame; follow SHOT for camera movement.\nOutput: 8s, 720p, 9:16."
+    },
+    {
+      "scene": 8,
+      "beat": "EL VACIO",
+      "characters_in_scene": [
+        "senora_clienta",
+        "hombre_dueno_local"
+      ],
+      "media_model": "Omni Flash",
+      "duration": "6s",
+      "image_model": "Nano Banana 2",
+      "media_prompt": "Render a medium two-shot, vertical 9:16. Photorealistic candid observational documentary footage of ordinary working-class Latin American people, filmed by a bystander at eye level. At @set_banqueta_puestito, @senora_clienta stands on the left in front of the folding table with her arms crossed over her basket; @hombre_dueno_local stands on the right with his empty hand half raised and his shirt untucked on one side, mouth closed. A blurred line of neighbors waits at the stand behind them. No readable text or lettering anywhere. Eye-level camera, flat bright morning daylight, slightly desaturated warm grade. natural available light, sharp focus, true-to-life skin texture and pores, lived-in worn environment, cluttered authentic props, blurred real crowd in the background, slightly desaturated warm grade, handheld phone camera at eye level, no cinematic color grading, no studio lighting, no beauty retouching",
+      "motion_prompt": "CLIP 8 of 10 - 6s - 9:16\nUse the attached frame as the composition, identity and wardrobe reference.\n\nSHOT: Eye-level handheld shot, slight push in toward the older woman on the left. No cuts.\n\nACTION - timestamped beats (reset to 00:00 for this clip):\n00:00-00:01: The older woman on the left steps between the man and the table.\n00:01-00:05: She speaks briskly, looking him in the eye. The heavy man on the right does not speak; he lowers his hand.\n00:05-00:06: She turns her back on him and faces the stand.\n\nAUDIO:\nThe older woman on the left, with a firm older Latin American female voice, blunt and unimpressed, speaks aloud in Latin American Spanish: \"Aquí usted no cobra nada. Y sus tamales ya nadie los quiere.\"\nTone: sentencia de vecina, sin crueldad y sin dudar.\nSFX/Ambience: people murmuring in a line, plates handled, a spoon in a pot. Music: No music.\n\nNegative Constraints: only one character speaks, the man keeps his mouth closed; no subtitles, no caption bars, no on-screen text, no readable signs or lettering in the scene, no readable text on the tin box or the banknotes, no misspelled or invented words, no morphing, no wardrobe changes, consistent faces, no camera cuts, no watermark.\nKeep faces, wardrobe, lighting and spatial relationships consistent with the attached frame; follow SHOT for camera movement.\nOutput: 6s, 720p, 9:16."
+    },
+    {
+      "scene": 9,
+      "beat": "CONSECUENCIA MUDA",
+      "characters_in_scene": [
+        "mujer_cocinera_tamales",
+        "hombre_dueno_local"
+      ],
+      "silent": true,
+      "media_model": "Omni Flash",
+      "duration": "4s",
+      "image_model": "Nano Banana 2",
+      "media_prompt": "Render a tight two-shot, vertical 9:16. Photorealistic candid observational documentary footage of ordinary working-class Latin American people, filmed by a bystander at eye level. At @set_banqueta_puestito, @hombre_dueno_local stands on the left with his shoulders drawn in, laying two folded banknotes on the table next to a plain dented metal tin box with no lettering; @mujer_cocinera_tamales stands on the right serving a plate to someone out of frame, mouth closed, not looking at him. No readable text or lettering anywhere. Eye-level camera, flat bright morning daylight, slightly desaturated warm grade. natural available light, sharp focus, true-to-life skin texture and pores, lived-in worn environment, cluttered authentic props, blurred real crowd in the background, slightly desaturated warm grade, handheld phone camera at eye level, no cinematic color grading, no studio lighting, no beauty retouching",
+      "motion_prompt": "CLIP 9 of 10 - 4s - 9:16 - WORDLESS BEAT, NOBODY SPEAKS\nUse the attached frame as the composition, identity and wardrobe reference.\n\nSHOT: Eye-level handheld shot, almost still, very slight drift from the banknotes up toward her face. No cuts.\n\nACTION - timestamped beats (reset to 00:00 for this clip):\n00:00-00:02: The heavy man on the left sets the two folded banknotes on the table and takes his hand away.\n00:02-00:04: The woman on the right keeps serving, glances at the banknotes once and nods a single time without smiling.\n\nAUDIO:\nNobody speaks. There is no dialogue at all in this clip.\nSFX/Ambience: banknotes set on a plastic tablecloth, a spoon in a pot, plates handled, people waiting. Music: No music.\n\nNegative Constraints: absolutely no dialogue, no voices, no whispering, no humming, both characters keep their mouths closed the whole clip; no subtitles, no caption bars, no on-screen text, no readable signs or lettering in the scene, no readable text on the tin box or the banknotes, no misspelled or invented words, no morphing, no wardrobe changes, consistent faces, no camera cuts, no watermark.\nKeep faces, wardrobe, lighting and spatial relationships consistent with the attached frame; follow SHOT for camera movement.\nOutput: 4s, 720p, 9:16."
+    },
+    {
+      "scene": 10,
+      "beat": "MORALEJA",
+      "characters_in_scene": [
+        "hombre_dueno_local"
+      ],
+      "media_model": "Omni Flash",
+      "duration": "10s",
+      "image_model": "Nano Banana 2",
+      "media_prompt": "Render a medium shot, vertical 9:16. Photorealistic candid observational documentary footage of ordinary working-class Latin American people, filmed by a bystander at eye level. Inside @set_puesto_tamales, @hombre_dueno_local sits alone on the low plastic stool with the burner off and both cold pots with their lids on, his hands empty on his knees, looking out at the empty market aisle. No readable text or lettering anywhere. Eye-level camera, warm low golden late afternoon light, slightly desaturated warm grade. natural available light, sharp focus, true-to-life skin texture and pores, lived-in worn environment, cluttered authentic props, blurred real crowd in the background, slightly desaturated warm grade, handheld phone camera at eye level, no cinematic color grading, no studio lighting, no beauty retouching",
+      "motion_prompt": "CLIP 10 of 10 - 10s - 9:16\nUse the attached frame as the composition, identity and wardrobe reference.\n\nSHOT: Eye-level handheld shot, very slow push in from a medium shot to a chest-up framing. No cuts.\n\nACTION - timestamped beats (reset to 00:00 for this clip):\n00:00-00:02: He looks out at the empty aisle and rubs his palms once on his knees.\n00:02-00:08: He speaks quietly, still looking out at the aisle, not at the camera.\n00:08-00:10: He stands up slowly and lifts one cold pot off the burner.\n\nAUDIO:\nThe heavy man alone on the stool, with a deep relaxed middle-aged Latin American male voice, slightly nasal, unhurried, exhales with annoyance before speaking, speaks aloud in Latin American Spanish: \"Quise cobrar por una esquina que nunca fue mía. La gente no sigue al lugar. Sigue a quien la trata bien.\"\nTone: entendimiento tardío, sin excusas.\nSFX/Ambience: a steel pot lifted, an empty market, a distant metal shutter closing. Music: No music.\n\nNegative Constraints: only one character is present and only that character speaks; no subtitles, no caption bars, no on-screen text, no readable signs or lettering in the scene, no readable text on the tin box or the banknotes, no misspelled or invented words, no morphing, no wardrobe changes, consistent faces, no camera cuts, no watermark.\nKeep faces, wardrobe, lighting and spatial relationships consistent with the attached frame; follow SHOT for camera movement.\nOutput: 10s, 720p, 9:16."
+    }
+  ]
+}

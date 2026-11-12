@@ -133,6 +133,38 @@ def build_segments(prompt: str, sheet_map: dict) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# Memoria de personajes y escenarios (recursos/personajes.json)
+# ---------------------------------------------------------------------------
+def registro_path() -> Path:
+    return Path(config.RECURSOS_DIR) / "personajes.json"
+
+
+def leer_registro() -> dict:
+    """{label: {tipo, description, voice}} de todo lo que ya tiene lamina."""
+    p = registro_path()
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+
+
+def registrar(tipo: str, label: str, description: str, voice: str = "") -> None:
+    """Guarda la ficha junto a la lamina para reusar el personaje en otro guion."""
+    reg = leer_registro()
+    reg[label] = {"tipo": tipo.lower(), "description": description, "voice": voice}
+    registro_path().parent.mkdir(parents=True, exist_ok=True)
+    registro_path().write_text(json.dumps(reg, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+def entidades(meta: dict) -> list[tuple[str, str, str, str]]:
+    """(tipo, label, description, voice) de personajes y escenarios del guion."""
+    characters = meta.get("characters", []) or []
+    char_labels = [c["label"] for c in characters]
+    return [
+        ("Personaje", c["label"], c.get("description", ""), c.get("voice", "")) for c in characters
+    ] + [
+        ("Escenario", label, desc, "") for label, desc in collect_sets(meta, char_labels).items()
+    ]
+
+
+# ---------------------------------------------------------------------------
 # Laminas (@-buscables)
 # ---------------------------------------------------------------------------
 async def _gen_and_download_sheet(fm, prompt: str, out_png: Path, aspect: str) -> None:
@@ -167,8 +199,6 @@ async def _prepare_sheets(guion: dict, output_dir: Path, log, fm) -> dict:
                                        en recursos/ y se sube.
     """
     meta = guion["metadata"]
-    characters = meta.get("characters", []) or []
-    char_labels = [c["label"] for c in characters]
 
     map_file = output_dir / "sheet_map.json"
     sheet_map: dict = json.loads(map_file.read_text(encoding="utf-8")) if map_file.exists() else {}
@@ -179,16 +209,12 @@ async def _prepare_sheets(guion: dict, output_dir: Path, log, fm) -> dict:
     page = await fm["get_page"]()
     uploaded_any = False
 
-    entities: list[tuple[str, str, str]] = [
-        ("Personaje", c["label"], c.get("description", "")) for c in characters
-    ] + [
-        ("Escenario", label, desc) for label, desc in collect_sets(meta, char_labels).items()
-    ]
+    entities = entidades(meta)
     if not entities:
         log.warn("  Sin personajes ni escenarios declarados: las escenas iran sin @menciones.")
         return {}
 
-    for tipo, label, description in entities:
+    for tipo, label, description, voice in entities:
         if label in sheet_map:
             log.info(f"  {tipo} reanudado: {label} -> @{sheet_map[label]}")
             continue
@@ -200,6 +226,7 @@ async def _prepare_sheets(guion: dict, output_dir: Path, log, fm) -> dict:
             template = SET_PROMPT_TEMPLATE if tipo == "Escenario" else PORTRAIT_PROMPT_TEMPLATE
             # .replace en vez de .format: las descripciones pueden traer llaves.
             await _gen_and_download_sheet(fm, template.replace("{description}", description), png, aspect)
+            registrar(tipo, label, description, voice)
             log.ok(f"    Lamina guardada en {png}")
         else:
             log.info(f"  {tipo} existente: {png.name} (se reusa la lamina de recursos/)")
@@ -344,6 +371,36 @@ async def _run_async(guion: dict, output_dir: Path, log, fm: dict) -> None:
 def run(guion: dict, output_dir: Path, log) -> None:
     fm = _load_flow_modules()
     asyncio.run(_run_async(guion, output_dir, log, fm))
+
+
+async def _laminas_async(guion: dict, fm: dict) -> list[str]:
+    """Genera SOLO las laminas que faltan (imagenes, 0 creditos de video)."""
+    meta = guion["metadata"]
+    aspect = meta.get("aspect_ratio", config.DEFAULT_ASPECT)
+    recursos = Path(config.RECURSOS_DIR)
+    faltan = [e for e in entidades(meta) if not (recursos / f"{e[1]}.png").exists()]
+    if not faltan:
+        return []
+    await fm["startup"]()
+    try:
+        await fm["create_project"]()
+        for tipo, label, description, voice in faltan:
+            print(f"  {tipo} nuevo: {label} -> generando lamina")
+            template = SET_PROMPT_TEMPLATE if tipo == "Escenario" else PORTRAIT_PROMPT_TEMPLATE
+            await _gen_and_download_sheet(
+                fm, template.replace("{description}", description), recursos / f"{label}.png", aspect,
+            )
+            registrar(tipo, label, description, voice)
+    finally:
+        try:
+            await fm["shutdown"]()
+        except Exception as e:
+            print(f"shutdown Flow: {e}")
+    return [e[1] for e in faltan]
+
+
+def run_laminas(guion: dict) -> list[str]:
+    return asyncio.run(_laminas_async(guion, _load_flow_modules()))
 
 
 # ── Self-test de los helpers puros (`python motor/visuals.py`) ──────────────

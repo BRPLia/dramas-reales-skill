@@ -4,6 +4,7 @@ startup() → llamado desde FastAPI lifespan al arrancar.
 shutdown() → llamado desde FastAPI lifespan al cerrar.
 """
 import asyncio
+import os
 from pathlib import Path
 from urllib.parse import urlsplit
 from playwright.async_api import async_playwright, BrowserContext, Page, Playwright
@@ -76,6 +77,10 @@ async def startup() -> None:
             accept_downloads=True,
             downloads_path=str(dl_dir),
             viewport={"width": 1280, "height": 900},
+            # Opcional: FLOW_RECORD_DIR=<carpeta> graba la sesion en .webm.
+            **({"record_video_dir": os.environ["FLOW_RECORD_DIR"],
+                "record_video_size": {"width": 1280, "height": 900}}
+               if os.getenv("FLOW_RECORD_DIR") else {}),
         )
 
     _page = _context.pages[0] if _context.pages else await _context.new_page()

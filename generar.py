@@ -21,6 +21,14 @@ Comandos
       Valida el guion SIN gastar un solo credito. Correlo siempre antes de
       generar: 10 clips de video cuestan caro y un typo los tira.
 
+  python generar.py laminas <guion.json>
+      Crea SOLO las laminas (personajes y escenarios) que falten. Son imagenes:
+      revisalas antes de pagar los 10 clips. Quedan guardadas en recursos/.
+
+  python generar.py personajes
+      Lista los personajes y escenarios guardados con su ficha, para reusarlos
+      en otro video con el mismo label.
+
   python generar.py recursos <guion.json>
       MODO 1 — Solo recursos. Genera y descarga los clips de cada escena
       (escena1.mp4, escena2.mp4, ...) listos para que TU los unas en tu editor.
@@ -152,7 +160,44 @@ def validar_guion(guion: dict) -> list[str]:
         if len(personajes) > 2:
             problemas.append(f"{pre}: max 2 personajes en cuadro (hay {len(personajes)})")
 
+        # Un solo hablante por clip: exactamente una linea hablada (o ninguna si es muda).
+        lineas = _dialogos(scene)
+        if scene.get("silent") is True and lineas:
+            problemas.append(f"{pre}: tiene \"silent\": true pero el motion_prompt trae dialogo")
+        if scene.get("silent") is not True and len(lineas) != 1:
+            problemas.append(
+                f"{pre}: se espera UNA linea hablada (Spanish: \"...\") y hay {len(lineas)}. "
+                "Si la escena es muda, declara \"silent\": true"
+            )
+        if re.search(r"\[INSERT|\[TODO|<placeholder>", (scene.get("media_prompt") or "") + (scene.get("motion_prompt") or ""), re.I):
+            problemas.append(f"{pre}: quedan textos de relleno sin completar")
+
     return problemas
+
+
+def _dialogos(scene: dict) -> list[str]:
+    return re.findall(r'Spanish:\s*"([^"\n]+)"', scene.get("motion_prompt") or "")
+
+
+def avisos_guion(guion: dict) -> list[str]:
+    """Avisos que no bloquean: ritmo de habla y duracion total. Pura."""
+    avisos: list[str] = []
+    total = 0
+    for scene in guion["scenes"]:
+        seg = int((scene.get("duration") or "8s").rstrip("s"))
+        total += seg
+        lineas = _dialogos(scene)
+        if len(lineas) == 1 and seg > 2:
+            # Grupos de vocales por segundo: aproximacion de silabas. El habla ocupa ~dur-2s.
+            ritmo = len(re.findall(r"[aeiouáéíóúü]+", lineas[0].lower())) / (seg - 2)
+            if ritmo > 6.2:
+                avisos.append(
+                    f"escena {scene.get('scene')}: la linea parece larga para {seg}s "
+                    f"({len(lineas[0].split())} palabras). Recortala o sube la duracion."
+                )
+    if not 70 <= total <= 90:
+        avisos.append(f"duracion total {total}s fuera del objetivo de 70-90s")
+    return avisos
 
 
 def load_guion(path: Path) -> dict:
@@ -301,6 +346,8 @@ def cmd_check(args) -> int:
     labels = char_labels + list(visuals.collect_sets(meta, char_labels))
 
     print("GUION OK.")
+    for a in avisos_guion(guion):
+        print(f"  AVISO: {a}")
     print(f"  titulo:   {meta['title']}")
     print(f"  escenas:  {len(escenas)}")
     print(f"  subtitulos: {'si' if meta.get('subtitulos') else 'no (video limpio)'}")
@@ -311,7 +358,52 @@ def cmd_check(args) -> int:
         print("    (si querias una cara o locacion distinta, cambia el label)")
     if nuevas:
         print(f"  laminas que se generaran ({len(nuevas)}): {', '.join(nuevas)}")
+    registro = visuals.leer_registro()
+    for _tipo, label, desc, _voz in visuals.entidades(meta):
+        guardada = registro.get(label, {}).get("description")
+        if label in reusadas and guardada and guardada != desc:
+            print(f"  AVISO: '{label}' ya existe con OTRA descripcion. Se usara la lamina guardada;")
+            print("         copia su ficha con 'python generar.py personajes' o cambia el label.")
     print(f"\nCosto estimado en Flow: {len(nuevas)} imagenes + {len(escenas)} videos.")
+    return 0
+
+
+def cmd_personajes(_args) -> int:
+    """Lista los personajes y escenarios guardados, con su ficha para copiarla."""
+    recursos = Path(config.RECURSOS_DIR)
+    registro = visuals.leer_registro()
+    laminas = sorted(p.stem for p in recursos.glob("*.png"))
+    if not laminas:
+        print("Aun no hay personajes guardados. Crealos con: python generar.py laminas <guion.json>")
+        return 0
+    print(f"PERSONAJES Y ESCENARIOS GUARDADOS ({len(laminas)}) en {recursos}")
+    print("Para reusar uno en otro video: mismo label y copia su ficha tal cual.\n")
+    for label in laminas:
+        ficha = registro.get(label, {})
+        print(f"@{label}  [{ficha.get('tipo', 'sin ficha')}]")
+        if ficha.get("description"):
+            print(f"  description: {ficha['description']}")
+        if ficha.get("voice"):
+            print(f"  voice: {ficha['voice']}")
+    return 0
+
+
+def cmd_laminas(args) -> int:
+    """Genera solo las laminas que faltan, para revisarlas antes de pagar videos."""
+    if not session_exists():
+        print("SIN SESION. Corre primero: python generar.py login")
+        return 1
+    try:
+        guion = load_guion(Path(args.guion).resolve())
+    except Exception as e:
+        print(f"ERROR: guion invalido: {e}", file=sys.stderr)
+        return 1
+    nuevas = visuals.run_laminas(guion)
+    if nuevas:
+        print(f"OK: laminas nuevas en recursos/: {', '.join(nuevas)}")
+        print("Revisalas (ropa, cara visible, sin texto). Si una salio mal, borrala y repite.")
+    else:
+        print("Todas las laminas de este guion ya existian en recursos/. Nada que generar.")
     return 0
 
 
@@ -423,6 +515,10 @@ def build_parser() -> argparse.ArgumentParser:
     pk = sub.add_parser("check", help="Validar el guion sin gastar creditos.")
     pk.add_argument("guion", help="Ruta al guion.json")
 
+    sub.add_parser("personajes", help="Listar personajes y escenarios guardados.")
+    pl = sub.add_parser("laminas", help="Crear solo las laminas del guion (0 creditos de video).")
+    pl.add_argument("guion", help="Ruta al guion.json")
+
     pr = sub.add_parser("recursos", help="MODO 1: solo los clips de cada escena.")
     pr.add_argument("guion", help="Ruta al guion.json")
 
@@ -440,6 +536,8 @@ HANDLERS = {
     "status": cmd_status,
     "doctor": cmd_doctor,
     "check": cmd_check,
+    "personajes": cmd_personajes,
+    "laminas": cmd_laminas,
     "recursos": cmd_recursos,
     "video": cmd_video,
     "clean": cmd_clean,
