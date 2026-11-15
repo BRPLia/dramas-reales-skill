@@ -126,12 +126,19 @@ async def media_ids(page) -> list[str]:
     )
 
 
-async def _poll_until_ready(page, media_sel: str, pre_cards, pre_errors: int, timeout_ms: int, exclude_media_ids=None) -> str:
+async def _poll_until_ready(page, media_sel: str, pre_cards, pre_errors: int, timeout_ms: int, exclude_media_ids=None,
+                            pre_keys=None) -> str:
     """Espera a que aparezca el asset nuevo o una card de error NUEVA.
 
     Devuelve 'ok' o 'error'. Lanza TimeoutError si no pasa ninguna de las dos.
+
+    Card nueva = hay mas cards que antes O la primera card no es ninguna de las
+    que habia antes (`pre_keys`). Solo contar falla con proyectos grandes en 16:9:
+    las cards son enormes, Flow deja de montar mas y el total no sube (2026-11-15).
     """
     guard = "true" if pre_cards is None else f"cards.length > {pre_cards}"
+    if pre_keys is not None:
+        guard = f"({guard}) || !{json.dumps(pre_keys)}.includes(({MEDIA_KEY_JS})(({CARD_MEDIA_JS})(cards[0])))"
     is_video = "video" in media_sel
     tipo = "video" if is_video else "imagen"
     pre_policy = await page.locator(SEL_POLICY_TEXT).count()
@@ -296,12 +303,13 @@ async def _poll_until_ready(page, media_sel: str, pre_cards, pre_errors: int, ti
 
 
 async def _wait_for_media(media_sel: str, kind: str, timeout_ms: int,
-                          max_retries: int, pre_submit_count, exclude_media_ids=None):
+                          max_retries: int, pre_submit_count, exclude_media_ids=None, pre_keys=None):
     page = await get_page()
     pre_errors = await error_card_count(page)
 
     for intento in range(max_retries + 1):
-        estado = await _poll_until_ready(page, media_sel, pre_submit_count, pre_errors, timeout_ms,exclude_media_ids)
+        estado = await _poll_until_ready(page, media_sel, pre_submit_count, pre_errors, timeout_ms, exclude_media_ids,
+                                         pre_keys)
         if estado.startswith('ok'):
             return estado.split(':',1)[1] if ':' in estado else None
         if intento >= max_retries:
@@ -319,9 +327,10 @@ async def _wait_for_media(media_sel: str, kind: str, timeout_ms: int,
         pre_errors = await error_card_count(page)
 
 
-async def wait_for_image(timeout_ms: int = 120000, max_retries: int = 2, pre_submit_count: int | None = None) -> None:
+async def wait_for_image(timeout_ms: int = 120000, max_retries: int = 2, pre_submit_count: int | None = None,
+                         pre_keys: list | None = None) -> None:
     """Espera la imagen generada. Recupera sola si Flow falla por saturación."""
-    await _wait_for_media(SEL_RESULT_IMAGE, "imagen", timeout_ms, max_retries, pre_submit_count)
+    await _wait_for_media(SEL_RESULT_IMAGE, "imagen", timeout_ms, max_retries, pre_submit_count, pre_keys=pre_keys)
     page = await get_page()
     # Confirmar que el bitmap está decodificado antes de dejar seguir al motor.
     try:
@@ -337,9 +346,11 @@ async def wait_for_image(timeout_ms: int = 120000, max_retries: int = 2, pre_sub
         pass
 
 
-async def wait_for_video(timeout_ms: int = 180000, max_retries: int = 2, pre_submit_count: int | None = None, exclude_media_ids=None):
+async def wait_for_video(timeout_ms: int = 180000, max_retries: int = 2, pre_submit_count: int | None = None, exclude_media_ids=None,
+                         pre_keys: list | None = None):
     """Espera el video generado. Recupera sola si Flow falla. Default 3 min (180s)."""
-    asset_id=await _wait_for_media(SEL_RESULT_VIDEO, "video", timeout_ms, max_retries, pre_submit_count,exclude_media_ids)
+    asset_id=await _wait_for_media(SEL_RESULT_VIDEO, "video", timeout_ms, max_retries, pre_submit_count,exclude_media_ids,
+                                   pre_keys)
     if asset_id: return asset_id
     page = await get_page()
     try:

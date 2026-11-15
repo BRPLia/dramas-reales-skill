@@ -34,7 +34,7 @@ from motor.mentions import parse_mentions
 
 # Lamina de PERSONAJE: cuerpo completo, fondo neutro, pose legible.
 PORTRAIT_PROMPT_TEMPLATE = (
-    "Full-body character reference portrait for a short drama series, vertical 9:16 format. "
+    "Full-body character reference portrait for a short drama series, {formato} format. "
     "{description} "
     "Plain neutral background, three-quarters angle facing camera, full body visible, "
     "natural relaxed pose, clear readable facial expression. "
@@ -44,12 +44,22 @@ PORTRAIT_PROMPT_TEMPLATE = (
 
 # Lamina de ESCENARIO: establishing sin personas, para anclar la locacion.
 SET_PROMPT_TEMPLATE = (
-    "Establishing shot of a single location for a short drama, vertical 9:16 format. "
+    "Establishing shot of a single location for a short drama, {formato} format. "
     "EMPTY scene, absolutely NO people, no characters. "
     "{description} "
     "No readable text, no signs, no lettering, no prices, no brand labels anywhere. "
     "Wide establishing angle, clear and consistent spatial layout, props and lighting."
 )
+
+
+def prompt_lamina(tipo: str, description: str, aspect: str) -> str:
+    """Prompt de una lamina. El formato sigue al guion: un 9:16 fijo en un guion 16:9
+    da un retrato vertical encajado con bandas borrosas a los lados."""
+    template = SET_PROMPT_TEMPLATE if tipo == "Escenario" else PORTRAIT_PROMPT_TEMPLATE
+    w, h = (int(x) for x in aspect.split(":"))
+    formato = f"{'vertical' if h > w else 'horizontal' if w > h else 'square'} {aspect}"
+    # .replace en vez de .format: las descripciones pueden traer llaves.
+    return template.replace("{formato}", formato).replace("{description}", description)
 
 
 class SceneError(RuntimeError):
@@ -79,7 +89,7 @@ def _load_flow_modules() -> dict:
         select_ingredients_by_name,
     )
     from flow_provider.prompt import submit_prompt, submit_prompt_with_mentions
-    from flow_provider.wait import wait_for_image, wait_for_video
+    from flow_provider.wait import wait_for_image, wait_for_video, media_ids
     from flow_provider.download import download_latest, delete_latest_card
 
     return {
@@ -98,6 +108,7 @@ def _load_flow_modules() -> dict:
         "submit_prompt_with_mentions": submit_prompt_with_mentions,
         "wait_for_image": wait_for_image,
         "wait_for_video": wait_for_video,
+        "media_ids": media_ids,
         "download_latest": download_latest,
         "delete_latest_card": delete_latest_card,
     }
@@ -173,9 +184,10 @@ async def _gen_and_download_sheet(fm, prompt: str, out_png: Path, aspect: str) -
     await fm["select_image_mode"](model=config.IMAGE_MODEL, aspect_ratio=aspect, count=1)
     await page.wait_for_timeout(1500)
     pre = await fm["get_canvas_count"]()
+    pre_keys = await fm["media_ids"](page)
     await fm["submit_prompt"](prompt)
     try:
-        await fm["wait_for_image"](timeout_ms=240_000, pre_submit_count=pre)
+        await fm["wait_for_image"](timeout_ms=240_000, pre_submit_count=pre, pre_keys=pre_keys)
     except Exception:
         await fm["delete_latest_card"](False)
         raise
@@ -223,9 +235,7 @@ async def _prepare_sheets(guion: dict, output_dir: Path, log, fm) -> dict:
             if not description:
                 raise RuntimeError(f"{tipo} '{label}': no hay {png.name} ni 'description' para generarlo.")
             log.info(f"  {tipo} nuevo: {label} -> generando lamina")
-            template = SET_PROMPT_TEMPLATE if tipo == "Escenario" else PORTRAIT_PROMPT_TEMPLATE
-            # .replace en vez de .format: las descripciones pueden traer llaves.
-            await _gen_and_download_sheet(fm, template.replace("{description}", description), png, aspect)
+            await _gen_and_download_sheet(fm, prompt_lamina(tipo, description, aspect), png, aspect)
             registrar(tipo, label, description, voice)
             log.ok(f"    Lamina guardada en {png}")
         else:
@@ -258,9 +268,10 @@ async def _gen_frame_with_mentions(fm, log, n: int, image_prompt: str, aspect: s
     await fm["select_image_mode"](model=image_model, aspect_ratio=aspect, count=1)
     segments = build_segments(image_prompt, sheet_map)
     pre = await fm["get_canvas_count"]()
+    pre_keys = await fm["media_ids"](page)
     await fm["submit_prompt_with_mentions"](segments)
     try:
-        await fm["wait_for_image"](timeout_ms=240_000, pre_submit_count=pre)
+        await fm["wait_for_image"](timeout_ms=240_000, pre_submit_count=pre, pre_keys=pre_keys)
     except Exception:
         await fm["delete_latest_card"](False)
         raise
@@ -283,9 +294,10 @@ async def _animate_frame(fm, log, n: int, motion_prompt: str, model: str, aspect
     await fm["select_ingredients_by_name"]([frame_name])
     await asyncio.sleep(2)
     pre = await fm["get_canvas_count"]()
+    pre_keys = await fm["media_ids"](page)
     await fm["submit_prompt"](motion_prompt)
     try:
-        await fm["wait_for_video"](timeout_ms=360_000, pre_submit_count=pre)
+        await fm["wait_for_video"](timeout_ms=360_000, pre_submit_count=pre, pre_keys=pre_keys)
     except Exception:
         await fm["delete_latest_card"](True)
         raise
@@ -307,7 +319,7 @@ async def _download_video(fm, log, n: int, out_path: Path) -> None:
     raise RuntimeError("Video generado pero no se pudo descargar tras 3 intentos")
 
 
-async def _run_async(guion: dict, output_dir: Path, log, fm: dict) -> None:
+async def _run_async(guion: dict, output_dir: Path, log, fm: dict, solo: set | None = None) -> None:
     assets = output_dir / "assets"
     meta = guion["metadata"]
     aspect = meta.get("aspect_ratio", config.DEFAULT_ASPECT)
@@ -329,7 +341,9 @@ async def _run_async(guion: dict, output_dir: Path, log, fm: dict) -> None:
 
         for scene in guion["scenes"]:
             n = scene["scene"]
-            model = scene.get("media_model", config.VIDEO_MODEL)
+            if solo and n not in solo:
+                continue
+            model =scene.get("media_model", config.VIDEO_MODEL)
             image_model = scene.get("image_model", config.IMAGE_MODEL)
             duration = scene.get("duration")
             image_prompt = scene.get("media_prompt") or scene["motion_prompt"]
@@ -368,9 +382,9 @@ async def _run_async(guion: dict, output_dir: Path, log, fm: dict) -> None:
             log.warn(f"shutdown Flow: {e}")
 
 
-def run(guion: dict, output_dir: Path, log) -> None:
+def run(guion: dict, output_dir: Path, log, solo: set | None = None) -> None:
     fm = _load_flow_modules()
-    asyncio.run(_run_async(guion, output_dir, log, fm))
+    asyncio.run(_run_async(guion, output_dir, log, fm, solo))
 
 
 async def _laminas_async(guion: dict, fm: dict) -> list[str]:
@@ -386,10 +400,7 @@ async def _laminas_async(guion: dict, fm: dict) -> list[str]:
         await fm["create_project"]()
         for tipo, label, description, voice in faltan:
             print(f"  {tipo} nuevo: {label} -> generando lamina")
-            template = SET_PROMPT_TEMPLATE if tipo == "Escenario" else PORTRAIT_PROMPT_TEMPLATE
-            await _gen_and_download_sheet(
-                fm, template.replace("{description}", description), recursos / f"{label}.png", aspect,
-            )
+            await _gen_and_download_sheet(fm, prompt_lamina(tipo, description, aspect), recursos / f"{label}.png", aspect)
             registrar(tipo, label, description, voice)
     finally:
         try:
@@ -425,7 +436,10 @@ if __name__ == "__main__":
             pass
 
     # Las descripciones con llaves no deben romper la plantilla.
-    tpl = PORTRAIT_PROMPT_TEMPLATE.replace("{description}", "DESC {con} llaves")
+    tpl = prompt_lamina("Personaje", "DESC {con} llaves", "9:16")
     assert "DESC {con} llaves" in tpl and "{description}" not in tpl
+    assert "vertical 9:16" in tpl
+    assert "horizontal 16:9" in prompt_lamina("Escenario", "x", "16:9")
+    assert "{formato}" not in prompt_lamina("Escenario", "x", "1:1")
 
     print("visuals.py: OK — build_segments, collect_sets y plantillas pasaron")

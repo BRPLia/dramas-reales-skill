@@ -11,6 +11,9 @@ session/*
 recursos/*
 !recursos/LEEME.txt
 
+# Evidencia de estilos clonados (fotogramas y transcripciones de videos ajenos: solo local)
+estilos/*/evidencia/
+
 # Salidas generadas
 outputs/*
 !outputs/LEEME.txt

@@ -1,0 +1,58 @@
+{
+ "videos": 2,
+ "duracion_s": {
+  "mediana": 81.05,
+  "min": 64.0,
+  "max": 98.1
+ },
+ "tomas": {
+  "mediana": 18.5,
+  "min": 10,
+  "max": 27
+ },
+ "toma_mediana_s": {
+  "mediana": 2.92,
+  "min": 2.59,
+  "max": 3.24
+ },
+ "toma_min_s": {
+  "mediana": 0.85,
+  "min": 0.42,
+  "max": 1.28
+ },
+ "toma_max_s": {
+  "mediana": 17.66,
+  "min": 17.28,
+  "max": 18.04
+ },
+ "palabras": {
+  "mediana": 148.5,
+  "min": 99,
+  "max": 198
+ },
+ "palabras_por_minuto": {
+  "mediana": 107.0,
+  "min": 93,
+  "max": 121
+ },
+ "habla_pct": {
+  "mediana": 58.5,
+  "min": 54,
+  "max": 63
+ },
+ "primera_voz_s": {
+  "mediana": 1.67,
+  "min": 0.0,
+  "max": 3.34
+ },
+ "frases": {
+  "mediana": 24.0,
+  "min": 19,
+  "max": 29
+ },
+ "palabras_por_frase": {
+  "mediana": 6.0,
+  "min": 5.2,
+  "max": 6.8
+ }
+}

@@ -94,6 +94,10 @@ def validar_guion(guion: dict) -> list[str]:
     meta = guion["metadata"]
     if not meta.get("title"):
         problemas.append("metadata.title es requerido")
+    try:
+        leer_ficha(meta.get("estilo"))
+    except ValueError as e:
+        problemas.append(str(e))
     scenes = guion["scenes"]
     if not scenes:
         return problemas + ["scenes vacio"]
@@ -195,9 +199,25 @@ def avisos_guion(guion: dict) -> list[str]:
                     f"escena {scene.get('scene')}: la linea parece larga para {seg}s "
                     f"({len(lineas[0].split())} palabras). Recortala o sube la duracion."
                 )
-    if not 70 <= total <= 90:
-        avisos.append(f"duracion total {total}s fuera del objetivo de 70-90s")
+    ficha = leer_ficha(guion["metadata"].get("estilo"))
+    lo, hi = ficha.get("duracion_total_s", [70, 90])
+    if not lo <= total <= hi:
+        avisos.append(f"duracion total {total}s fuera del objetivo de {lo}-{hi}s")
+    if "escenas" in ficha:
+        lo, hi = ficha["escenas"]
+        if not lo <= len(guion["scenes"]) <= hi:
+            avisos.append(f"{len(guion['scenes'])} escenas fuera del rango del estilo ({lo}-{hi})")
     return avisos
+
+
+def leer_ficha(estilo: str | None) -> dict:
+    """Cifras del estilo clonado (estilos/<estilo>/ficha.json). Sin estilo: las de dramas-reales."""
+    if not estilo:
+        return {}
+    p = BASE_DIR / "estilos" / slugify(estilo) / "ficha.json"
+    if not p.exists():
+        raise ValueError(f"metadata.estilo '{estilo}': no existe {p}. Corre antes 'python generar.py analizar'.")
+    return json.loads(p.read_text(encoding="utf-8"))
 
 
 def load_guion(path: Path) -> dict:
@@ -410,14 +430,22 @@ def cmd_laminas(args) -> int:
 # ---------------------------------------------------------------------------
 # Pipeline (modos recursos / video)
 # ---------------------------------------------------------------------------
-def _run_pipeline(guion_path: Path, mode: str) -> int:
+def _run_pipeline(guion_path: Path, mode: str, solo: set | None = None) -> int:
     try:
         guion = load_guion(guion_path)
     except Exception as e:
         print(f"ERROR: guion invalido: {e}", file=sys.stderr)
         return 1
+    if solo and not solo <= {s["scene"] for s in guion["scenes"]}:
+        print(f"ERROR: --escenas {sorted(solo)} no existen en el guion", file=sys.stderr)
+        return 1
 
     output_dir = prepare_output_dir(guion)
+    for n in solo or ():
+        # Rehacer = generar de nuevo; el clip anterior se guarda, no se borra.
+        viejo = output_dir / "assets" / f"escena{n}.mp4"
+        if viejo.exists():
+            viejo.replace(viejo.with_name(f"anterior_escena{n}.mp4"))
     shutil.copy2(guion_path, output_dir / "guion.json")
     log = RunLogger(output_dir)
 
@@ -427,7 +455,7 @@ def _run_pipeline(guion_path: Path, mode: str) -> int:
     try:
         current_phase = "visuals"
         log.info("FASE 1: VISUALES (Flow — frame con @menciones -> animacion I2V)")
-        visuals.run(guion, output_dir, log)
+        visuals.run(guion, output_dir, log, solo)
 
         if guion["metadata"].get("subtitulos"):
             current_phase = "subtitulos"
@@ -463,7 +491,8 @@ def cmd_recursos(args) -> int:
     if not session_exists():
         print("SIN SESION. Corre primero: python generar.py login")
         return 1
-    return _run_pipeline(Path(args.guion).resolve(), mode="recursos")
+    solo = {int(n) for n in args.escenas.split(",")} if args.escenas else None
+    return _run_pipeline(Path(args.guion).resolve(), mode="recursos", solo=solo)
 
 
 def cmd_video(args) -> int:
@@ -471,6 +500,15 @@ def cmd_video(args) -> int:
         print("SIN SESION. Corre primero: python generar.py login")
         return 1
     return _run_pipeline(Path(args.guion).resolve(), mode="video")
+
+
+def cmd_analizar(args) -> int:
+    from motor import analisis
+    if not 1 <= len(args.urls) <= 10:
+        print("Pasa entre 1 y 10 enlaces de los Shorts que quieres clonar.")
+        return 1
+    analisis.run(slugify(args.estilo), args.urls, conservar=args.conservar)
+    return 0
 
 
 def cmd_clean(args) -> int:
@@ -521,9 +559,15 @@ def build_parser() -> argparse.ArgumentParser:
 
     pr = sub.add_parser("recursos", help="MODO 1: solo los clips de cada escena.")
     pr.add_argument("guion", help="Ruta al guion.json")
+    pr.add_argument("--escenas", help="Solo estas escenas, p. ej. 2,4. Si ya existen se rehacen (la anterior se guarda como anterior_escenaN.mp4)")
 
     pv = sub.add_parser("video", help="MODO 2: video final unido en Remotion.")
     pv.add_argument("guion", help="Ruta al guion.json")
+
+    pa = sub.add_parser("analizar", help="Medir Shorts virales para clonar su estilo (local, sin creditos).")
+    pa.add_argument("estilo", help="Nombre del estilo, p. ej. frutinovelas")
+    pa.add_argument("urls", nargs="+", help="Enlaces de los Shorts de referencia (1-10)")
+    pa.add_argument("--conservar", action="store_true", help="No borrar los videos descargados")
 
     pc = sub.add_parser("clean", help="Borrar resultados de outputs/.")
     pc.add_argument("project", nargs="?", default=None,
@@ -540,6 +584,7 @@ HANDLERS = {
     "laminas": cmd_laminas,
     "recursos": cmd_recursos,
     "video": cmd_video,
+    "analizar": cmd_analizar,
     "clean": cmd_clean,
 }
 _ASYNC = {"login", "status"}

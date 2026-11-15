@@ -80,6 +80,25 @@ reusarlo, pídele a tu agente «otra historia con la misma cocinera»: verá que
 existe y no la vuelve a crear. Si una lámina salió mal (letras en la ropa, lentes
 que tapan los ojos), bórrala de `recursos/` y vuelve a correr `laminas`.
 
+## Nuevo en v3 — clona el estilo de cualquier Short viral
+
+¿Hay un formato que está pegando? Pásale a tu agente los enlaces de los virales
+(y si puedes, un par del mismo formato que no funcionaron):
+
+```bash
+python generar.py analizar frutinovelas https://youtu.be/... https://youtu.be/...
+```
+
+Baja cada video, detecta los cortes, transcribe cada frase con su segundo y saca
+un fotograma por toma. Todo en tu computadora, sin créditos, y **borra los videos
+al terminar**. Con esa evidencia tu agente escribe una **ficha de estilo** y el
+guion la sigue; `check` te avisa si te sales del estilo. Hay una ficha de ejemplo
+en [`estilos/frutinovelas/`](./estilos/frutinovelas/ficha.md) y un guion en
+[`examples/guion_frutinovela.json`](./examples/guion_frutinovela.json).
+
+Necesita `pip install -r requirements-subs.txt` (la transcripción local),
+`yt-dlp` al día (`pip install -U yt-dlp`) y Node para que YouTube deje bajar. Se clona la **estructura**, nunca el contenido de otro canal.
+
 ## Subtítulos (opcionales)
 
 Por defecto el video sale **limpio**: el diálogo ya se escucha. Si los quieres:

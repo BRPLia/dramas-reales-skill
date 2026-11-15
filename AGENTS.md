@@ -104,6 +104,15 @@ nuevas de `recursos/` y espera su OK. Si una salió mal, bórrala y repite.
 
 **Paso 7 — Entrega** lo de `outputs/<proyecto>/` y reporta `status.json`.
 
+## 🧬 CLONAR UN ESTILO (si el usuario trae enlaces de virales de otro formato)
+1. Pídele 3–10 enlaces del mismo formato y, si puede, 1–2 que no funcionaron.
+2. `python generar.py analizar <estilo> <urls…>` (los que no funcionaron, con
+   otro nombre: `<estilo>-sin-exito`). Si yt-dlp da 403: `pip install -U yt-dlp`.
+3. Mira `estilos/<estilo>/evidencia/*/hoja.jpg` y `medidas.json` y escribe
+   `ficha.md` y `ficha.json` con `estilos/PLANTILLA.md`. El estilo de render
+   (3D, anime, foto) va en el **suffix**: las láminas solo reciben descripción + suffix.
+4. Sigue PRODUCIR desde el paso 2 con `"estilo": "<estilo>"` en el `metadata`.
+
 ## Reglas
 - **Nunca lances una generación sin el OK del usuario:** cada corrida son 10
   clips de video de pago.

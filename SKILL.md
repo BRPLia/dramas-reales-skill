@@ -37,10 +37,32 @@ El estilo está **hardcodeado**. Tú no diseñas el pipeline: escribes el
 | `python generar.py laminas <guion.json>` | Crea **solo las láminas** (personajes y escenarios) que falten. Son imágenes: 0 créditos. Revísalas antes de pagar los clips. |
 | `python generar.py personajes` | Lista los personajes y escenarios **guardados**, con su ficha, para reusarlos en otro video. |
 | `python generar.py recursos <guion.json>` | Solo los clips `escena1.mp4 … escena10.mp4` para que el usuario los una en su editor. |
+| `python generar.py recursos <guion.json> --escenas 2,4` | Solo esas escenas. Si ya existen, las **rehace** (la anterior queda como `anterior_escenaN.mp4`). Para arreglar un clip sin pagar los demás. |
 | `python generar.py video <guion.json>` | El **video final** ya unido con Remotion: limpio, sin marcas ni texto. |
+| `python generar.py analizar <estilo> <url> …` | **Clona un estilo.** Mide 3–10 Shorts virales (cortes, ritmo, texto, look). Local, 0 créditos. |
 | `python generar.py clean [proyecto]` | Borra resultados de `outputs/`. |
 
 Salida en `outputs/<fecha>_<titulo>/`.
+
+## 🧬 Clonar otro estilo viral (ingeniería inversa)
+Dramas-reales es el estilo por defecto, pero la arquitectura (láminas → frame →
+animación → Remotion) sirve para cualquier formato de historia. Para clonar uno:
+
+1. **El usuario elige los videos.** 3–10 Shorts virales del mismo formato; mejor
+   si añade 1–2 del mismo formato que **no** funcionaron, para comparar.
+2. `python generar.py analizar <estilo> <url1> <url2> …` → deja la evidencia en
+   `estilos/<estilo>/` (cifras, transcripción con tiempos, un fotograma por toma).
+   Los videos se borran al terminar.
+3. **Tú escribes la ficha** siguiendo `estilos/PLANTILLA.md`: `ficha.md` (las
+   reglas, cada una con su evidencia) y `ficha.json` (las cifras que valida `check`).
+4. El guion declara `"estilo": "<estilo>"` en `metadata` y sigue la ficha en
+   arco, ritmo y look. **Lo que no cambia:** un solo hablante por clip,
+   wardrobe-lock, cero texto en pantalla y el safety de abajo.
+5. `check` → `laminas` → revisa → `video`.
+
+Se clona la **estructura**, nunca el contenido: ni personajes con nombre, ni
+guiones, ni frases del canal original. Hay una ficha de ejemplo en
+`estilos/frutinovelas/`.
 
 ---
 
